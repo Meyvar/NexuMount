@@ -5,8 +5,8 @@
         <div class="login-wrapper">
           <span class="login-title">用户登录</span>
           <el-form ref="loginForm" :model="loginForm" class="login-form" :rules="LoginRules" @keyup.enter="login">
-            <el-form-item required prop="userCode">
-              <el-input v-model="loginForm.userCode" placeholder="用户名" size="large"/>
+            <el-form-item required prop="username">
+              <el-input v-model="loginForm.username" placeholder="用户名" size="large"/>
             </el-form-item>
             <el-form-item required prop="password">
               <el-input v-model="loginForm.password" placeholder="密码" size="large" type="password"/>
@@ -28,11 +28,11 @@ export default {
   data() {
     return {
       loginForm: {
-        userCode: "joker",
-        password: "123",
+        username: "admin",
+        password: "123456",
       },
       LoginRules: {
-        userCode: [
+        username: [
           {required: true, message: '请输入用户名', trigger: 'blur'}
         ],
         password: [
@@ -56,7 +56,6 @@ export default {
           this.$router.push(toPath)
         } else {
           this.$message.error(resp.msg)
-          this.loginForm.captcha = ''
         }
       }
     },
