@@ -78,17 +78,17 @@ export default {
 }
 
 .login-wrapper {
-  width: 344px;
+  width: calc(100% - 76px);
   height: 279px;
   box-shadow: 0 0 80px rgba(0, 0, 0, 0.4);
   overflow: hidden;
-  position: relative;
   background: #FFFFFF;
   text-align: center;
   padding: 38px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  position: absolute;
 }
 
 .login-title {
@@ -109,17 +109,19 @@ export default {
   width: 420px;
   perspective: 600px;
   right: 10%;
+  @media (max-width: 640px) {
+    width: 90%;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+  }
 }
 
 .icon-cards__content {
   position: absolute;
   height: 355px;
-  width: 420px;
+  width: 100%;
   transition: all 2s ease 0s;
-}
-
-.login-wrapper {
-  position: absolute;
 }
 
 .el-form-item {
