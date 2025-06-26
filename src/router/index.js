@@ -14,6 +14,18 @@ const routes = [
     ]
   },
   {
+    path: '/admin',
+    redirect: '/admin/home',
+    component: () => import('../views/admin/index.vue'),
+    children: [
+      {
+        path: 'home',
+        name: 'home',
+        component: () => import('../views/admin/home.vue')
+      },
+    ]
+  },
+  {
     path: '/login',
     name: 'login',
     component: () => import('../views/Login.vue')

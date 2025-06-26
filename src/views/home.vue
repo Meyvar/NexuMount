@@ -2,7 +2,10 @@
   <div class="file-layout">
     <div class="file-layout__header">
       <div class="files-path">
-        <el-icon size="25"><HomeFilled /></el-icon> 主页
+        <el-icon size="25">
+          <HomeFilled/>
+        </el-icon>
+        主页
       </div>
       <div class="files-view-type">
         <el-icon>
@@ -25,6 +28,11 @@ export default {}
 <style scoped>
 .file-layout, .file-layout__header, .file-layout__table {
   width: 100%;
+}
+
+.file-layout__table {
+  background: white;
+  box-shadow: var(--el-box-shadow-light)
 }
 
 .file-layout, .files-path, .files-view-type {
