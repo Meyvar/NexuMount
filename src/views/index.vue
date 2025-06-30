@@ -12,8 +12,8 @@
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item>后台管理</el-dropdown-item>
-              <el-dropdown-item>退出登录</el-dropdown-item>
+              <el-dropdown-item @click="this.$router.push('/admin')">后台管理</el-dropdown-item>
+              <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -34,7 +34,15 @@ export default {
   mounted() {
 
   },
-  methods: {},
+  methods: {
+    logout() {
+      this.$common.axiosGet("/public/logout.do", true).then((res) => {
+        if (res.success){
+          this.$router.push("/")
+        }
+      });
+    }
+  },
 }
 </script>
 

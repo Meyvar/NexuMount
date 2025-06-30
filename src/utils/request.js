@@ -1,7 +1,7 @@
 import axios from 'axios'
 import router from '../router/index.js'
 import Qs from "qs";
-import {ElLoading} from "element-plus";
+import {ElLoading, ElMessage} from "element-plus";
 
 // 重定向到登录页后重置用户信息
 export function redirect() {
@@ -33,9 +33,11 @@ service.interceptors.response.use(resp => {
                 },
                 false
             )
-        } else {
-            return Promise.resolve(resp.data)
+        } else if (resp.data.code === 403) {
+            router.go(-1)
+            ElMessage.error('当前账号无权访问！')
         }
+        return Promise.resolve(resp.data)
     }, error => {
         redirect()
         if (loading != null) {

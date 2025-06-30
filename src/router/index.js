@@ -20,8 +20,18 @@ const routes = [
     children: [
       {
         path: 'home',
-        name: 'home',
+        name: 'adminHome',
         component: () => import('../views/admin/home.vue')
+      },
+      {
+        path: 'user/list',
+        name: 'adminUserList',
+        component: () => import('../views/admin/user/list.vue')
+      },
+      {
+        path: 'bucket/list',
+        name: 'adminBucketList',
+        component: () => import('../views/admin/bucket/list.vue')
       },
     ]
   },

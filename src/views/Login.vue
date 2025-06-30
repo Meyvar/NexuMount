@@ -49,11 +49,7 @@ export default {
         if (resp.success) {
           this.$store.commit('setUserInfo', resp.data);
           store.commit('setLogged', true);
-          let toPath = this.$route.query.toPath
-          if (!toPath) {
-            toPath = '/home'
-          }
-          this.$router.push(toPath)
+          this.$router.push('/home')
         } else {
           this.$message.error(resp.msg)
         }

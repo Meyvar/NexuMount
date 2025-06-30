@@ -5,6 +5,9 @@ module.exports = defineConfig({
   transpileDependencies: true,
   lintOnSave: false,
   devServer: {
+    client:{
+      overlay: false
+    },
     port: process.env.VUE_APP_BASE_PORT,
     open: true,
     proxy: {
