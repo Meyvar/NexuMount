@@ -7,27 +7,14 @@
             <img src="@/assets/icon/house.png" width="20">
           </el-breadcrumb-item>
           <el-breadcrumb-item :to="{path: item.path}" v-for="item in breadcrumb" :key="item.title">
-            <div class="" style="width: 100%">{{ item.title }}</div>
+            {{ item.title }}
           </el-breadcrumb-item>
         </el-breadcrumb>
-      </div>
-      <div class="files-view-type" @click="showType" v-if="!preview">
-        <el-icon>
-          <Grid/>
-        </el-icon>
       </div>
     </div>
     <div class="file-layout__table">
 
-      <file-table :list-height="listHeight" :table-list="tableList" :getFileIcon="getFileIcon" :goPath="goPath"
-                  :format-size="formatSize" v-if="!preview && tableType == 'table'"
-      ></file-table>
 
-      <el-scrollbar :height="listHeight" v-if="!preview && tableType == 'grid'">
-        <file-grid :table-list="tableList" :getFileIcon="getFileIcon" :goPath="goPath"></file-grid>
-      </el-scrollbar>
-
-      <preview v-if="preview" :height="listHeight"></preview>
     </div>
   </div>
 </template>
@@ -38,13 +25,8 @@ import imageIcon from '@/assets/icon/image.png'
 import videoIcon from '@/assets/icon/video.png'
 import txtIcon from '@/assets/icon/txt.png'
 import fileIcon from '@/assets/icon/file.png'
-import FileTable from "@/components/fileTable.vue";
-import PathBreadcrumb from "@/components/pathBreadcrumb.vue";
-import Preview from "@/components/preview/preview.vue";
-import FileGrid from "@/components/fileGrid.vue";
 
 export default {
-  components: {FileGrid, Preview, PathBreadcrumb, FileTable},
   watch: {
     '$route.fullPath'() {
       this.initBreadcrumb();
@@ -62,15 +44,12 @@ export default {
         video: videoIcon,
         text: txtIcon,
         file: fileIcon,
-      },
-      preview: false
+      }
     }
   },
   mounted() {
     this.listHeight = window.innerHeight - 190;
-    this.initBreadcrumb();
-    let showType = localStorage.getItem("tableType")
-    this.tableType = showType
+    this.initBreadcrumb()
   },
   methods: {
     initBreadcrumb() {
@@ -83,15 +62,7 @@ export default {
           path: '/home/' + path.slice(0, i + 1).join('/')
         })
       }
-
-      let previewFile = JSON.parse(localStorage.getItem('preview'))
-      if (previewFile != null && path[path.length - 1] === previewFile.name) {
-        this.preview = true
-      } else {
-        localStorage.removeItem('preview')
-        this.preview = false
-        this.getTableList()
-      }
+      this.getTableList()
     },
     getTableList() {
       let path = decodeURIComponent(this.$route.path)
@@ -100,28 +71,21 @@ export default {
       } else {
         path = path.replace('/home', '')
       }
-
-      let list = this.$store.getters.getFileListMap(path)
-      if (list == null) {
-        this.$common.axiosJson("/pub/dav/list.do", {path: path}, true).then(res => {
-          if (res.success) {
-            list = res.data
-            this.tableList = list
-            this.$store.commit('setFileList', {path: path, list: list})
-          } else {
-            this.$message.error(res.msg);
-          }
-        })
-      } else {
-        this.tableList = list
-      }
-
+      this.$common.axiosJson("/pub/dav/list.do", {path: path}, true).then(res => {
+        if (res.success) {
+          this.tableList = []
+          this.tableList = res.data
+        } else {
+          this.$message.error(res.msg);
+        }
+      })
     },
     getFileIcon(row) {
+      console.log(row.type)
       if (row.type == 'folder') {
         return this.fileIcon.folder
       } else {
-        if (row.contentType == null) {
+        if (row.contentType == null){
           return this.fileIcon.file
         }
         if (row.contentType.indexOf('image') > -1) {
@@ -137,11 +101,8 @@ export default {
       }
     },
     goPath(row) {
-      if (row.type == 'file') {
-        localStorage.preview = JSON.stringify(row)
-      }
       this.$router.push({
-        path: '/home' + row.href,
+        path: '/home' + row.href
       })
     },
     formatSize(bytes) {
@@ -149,17 +110,6 @@ export default {
       else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + 'KB'
       else if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(2) + 'MB'
       else return (bytes / 1024 / 1024 / 1024).toFixed(2) + 'GB'
-    },
-    showType() {
-      let showType = localStorage.getItem("tableType")
-      this.tableType = showType
-      if (this.tableType == 'grid') {
-        this.tableType = 'table'
-        localStorage.tableType = 'table'
-      } else {
-        this.tableType = 'grid'
-        localStorage.tableType = 'grid'
-      }
     }
   }
 }
@@ -219,7 +169,47 @@ export default {
   font-size: 16px;
 }
 
-.el-breadcrumb__item {
-  white-space: nowrap;
+.file-table-header {
+  width: 100%;
+  height: 20px;
+  padding: 5px;
+  display: flex;
 }
+
+.file-item {
+  width: 100%;
+  height: 50px;
+}
+
+.el-table {
+  --el-table-border-color: n
+}
+</style>
+
+<style>
+
+
+/* ⚠️ 关键：固定表头表格的 body-wrapper 需要强制允许溢出 */
+.file_item .el-table__body-wrapper {
+  z-index: 0;
+}
+
+/* 行默认样式 */
+.file_item .el-table__row {
+  cursor: pointer;
+}
+
+/* 行默认样式 */
+.file_item .el-table__row .table-row-content {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transform-origin: center;
+  cursor: pointer;
+}
+
+/* Hover 放大效果 */
+.file_item .el-table__row:hover .table-row-content {
+  transform: scale(1.02);
+  z-index: 1;
+}
+
 </style>
