@@ -38,6 +38,9 @@ import imageIcon from '@/assets/icon/image.png'
 import videoIcon from '@/assets/icon/video.png'
 import txtIcon from '@/assets/icon/txt.png'
 import fileIcon from '@/assets/icon/file.png'
+import audioIcon from '@/assets/icon/audio.png'
+import pdfIcon from '@/assets/icon/pdf.png'
+
 import FileTable from "@/components/fileTable.vue";
 import PathBreadcrumb from "@/components/pathBreadcrumb.vue";
 import Preview from "@/components/preview/preview.vue";
@@ -62,6 +65,8 @@ export default {
         video: videoIcon,
         text: txtIcon,
         file: fileIcon,
+        audio: audioIcon,
+        pdf: pdfIcon,
       },
       preview: false
     }
@@ -132,6 +137,12 @@ export default {
         }
         if (row.contentType.indexOf('text') > -1) {
           return this.fileIcon.text
+        }
+        if (row.contentType.indexOf('audio') > -1) {
+          return this.fileIcon.audio
+        }
+        if (row.contentType.indexOf('pdf') > -1) {
+          return this.fileIcon.pdf
         }
         return this.fileIcon.file
       }

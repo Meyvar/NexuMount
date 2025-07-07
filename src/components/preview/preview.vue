@@ -1,8 +1,9 @@
 <template>
   <div class="preview" :style="{ height: height + 'px' }">
     <div class="preview_content">
-      <img class="content_img" v-if="type == 'image'" :src="href">
-      <vue3-video-player :src="href" v-if="type == 'video' || type == 'audio'"></vue3-video-player>
+      <img class="content_img" v-if="type === 'image'" :src="href">
+      <vue3-video-player :src="href" v-if="type === 'video' || type === 'audio'"></vue3-video-player>
+      <preview-text :src="href" v-if="type === 'text'"></preview-text>
     </div>
     <div class="button_list">
       <el-button type="primary"><img src="@/assets/icon/link.png" width="15" style="padding-right: 5px">复制链接</el-button>
@@ -45,6 +46,8 @@ export default {
             this.type = "video"
           } else if (data.contentType.indexOf('audio') > -1) {
             this.type = "audio"
+          } else if (data.contentType.indexOf('text') > -1) {
+            this.type = "text"
           }
         } else {
           this.$message.error(res.msg);
@@ -52,14 +55,7 @@ export default {
       })
     },
     download() {
-      // window.open(this.href, '_blank');
-
-      const link = document.createElement('a');
-      link.href = this.href;
-      link.download = JSON.parse(localStorage.getItem("preview")).name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      window.open(this.href, '_blank');
     }
   }
 }
@@ -72,7 +68,7 @@ export default {
 
 .preview_content {
   width: 100%;
-  height: calc(100% - 40px);
+  height: calc(100% - 45px);
 }
 
 .button_list {
@@ -81,6 +77,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 5px;
 }
 
 .content_img {

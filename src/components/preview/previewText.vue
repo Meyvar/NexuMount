@@ -1,42 +1,74 @@
 <template>
-  <div class="text-content">
-    <pre>{{ text }}</pre>
-  </div>
+  <el-scrollbar>
+    <div
+        v-for="(line, index) in highlightedLines"
+        :key="index"
+        class="line"
+    >
+      <div class="line-number">{{ index + 1 }}</div>
+      <div class="line-content" v-html="line"></div>
+    </div>
+  </el-scrollbar>
+
+
 </template>
 
 <script>
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github.css'
+
 export default {
   props: {
-    href: {
+    src: {
       type: String,
       default: ''
     }
   },
   data() {
     return {
-      text: ''
+      highlightedLines: []
     }
   },
   mounted() {
-    this.loadContent()
+    this.loadAndHighlight()
   },
   methods: {
-    loadContent() {
-      this.$common.axiosGet(this.href).then((res) => {
-        if (res.success) {
-          this.text = res.data
-        } else {
-          this.$message.error(res.msg);
-        }
-      })
+    async loadAndHighlight() {
+      try {
+        const response = await fetch(this.src)
+        if (!response.ok) throw new Error('加载失败')
+        const text = await response.text()
+
+        // 高亮整个文本（自动识别语言）
+        const {value} = hljs.highlightAuto(text)
+
+        // 按行拆分
+        this.highlightedLines = value.split('\n')
+      } catch (e) {
+        this.highlightedLines = [`<span style="color:red;">${e.message}</span>`]
+      }
     }
   }
 }
 </script>
 
 <style scoped>
-.text-content{
-  width: 100%;
-  height: 100%;
+.line {
+  display: flex;
+  background: #eee;
+}
+
+.line-number {
+  width: 40px;
+  color: #999;
+  text-align: right;
+  padding-right: 10px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.line-content {
+  flex: 1;
+  white-space: pre-wrap;
 }
 </style>
