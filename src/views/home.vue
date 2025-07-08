@@ -27,7 +27,7 @@
         <file-grid :table-list="tableList" :getFileIcon="getFileIcon" :goPath="goPath"></file-grid>
       </el-scrollbar>
 
-      <preview v-if="preview" :height="listHeight"></preview>
+      <preview v-if="preview" :height="listHeight" :getFileIcon="getFileIcon" :get-file-size="formatSize"></preview>
     </div>
   </div>
 </template>
@@ -75,6 +75,9 @@ export default {
     this.listHeight = window.innerHeight - 190;
     this.initBreadcrumb();
     let showType = localStorage.getItem("tableType")
+    if (!showType) {
+      showType = "table"
+    }
     this.tableType = showType
   },
   methods: {

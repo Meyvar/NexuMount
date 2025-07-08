@@ -47,8 +47,6 @@ export default {
       if (valid) {
         let resp = await this.$common.axiosForm("/public/login.do", this.loginForm, true);
         if (resp.success) {
-          this.$store.commit('setUserInfo', resp.data);
-          store.commit('setLogged', true);
           this.$router.push('/home')
         } else {
           this.$message.error(resp.msg)

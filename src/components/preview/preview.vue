@@ -2,12 +2,19 @@
   <div class="preview" :style="{ height: height + 'px' }">
     <div class="preview_content">
       <img class="content_img" v-if="type === 'image'" :src="href">
-      <vue3-video-player :src="href" v-if="type === 'video' || type === 'audio'"></vue3-video-player>
-      <preview-text :src="href" v-if="type === 'text'"></preview-text>
+      <vue3-video-player :src="href" v-else-if="type === 'video' || type === 'audio'"></vue3-video-player>
+      <preview-text :src="href" v-else-if="type === 'text'"></preview-text>
+      <div class="notPreview" v-else>
+        <img :src="fileIcon">
+        <div class="file-info">{{ fileData.name }} ({{ getFileSize(fileData.size)}})</div>
+      </div>
     </div>
     <div class="button_list">
-      <el-button type="primary"><img src="@/assets/icon/link.png" width="15" style="padding-right: 5px">复制链接</el-button>
-      <el-button type="primary" @click="download"><img src="@/assets/icon/download.png" width="20" style="padding-right: 5px">下载</el-button>
+      <el-button type="primary" @click="copy"><img src="@/assets/icon/link.png" width="15" style="padding-right: 5px">复制链接
+      </el-button>
+      <el-button type="primary" @click="download"><img src="@/assets/icon/download.png" width="20"
+                                                       style="padding-right: 5px">下载
+      </el-button>
     </div>
   </div>
 </template>
@@ -21,13 +28,25 @@ export default {
     height: {
       type: Number,
       default: 100
+    },
+    getFileIcon: {
+      type: Function,
+      default: () => {
+      }
+    },
+    getFileSize: {
+      type: Function,
+      default: () => {
+      }
     }
   },
   data() {
     return {
       type: '',
       href: '',
-      text: ''
+      text: '',
+      fileIcon: null,
+      fileData: {}
     }
   },
   mounted() {
@@ -39,7 +58,11 @@ export default {
       this.$common.axiosGet("/pub/dav/get.do?path=" + file.href, false).then((res) => {
         if (res.success) {
           let data = res.data;
+          this.fileData = data
           this.href = data.href;
+          if (!data.contentType) {
+            data.contentType = "";
+          }
           if (data.contentType.indexOf('image') > -1) {
             this.type = "image"
           } else if (data.contentType.indexOf('video') > -1) {
@@ -48,6 +71,8 @@ export default {
             this.type = "audio"
           } else if (data.contentType.indexOf('text') > -1) {
             this.type = "text"
+          } else {
+            this.fileIcon = this.getFileIcon(res.data);
           }
         } else {
           this.$message.error(res.msg);
@@ -55,7 +80,30 @@ export default {
       })
     },
     download() {
-      window.open(this.href, '_blank');
+      let path = JSON.parse(localStorage.getItem("preview")).href
+      window.open("/api/pub/dav/download.do?path=" + path, '_blank');
+    },
+    async copy() {
+      let path = location.origin + "/api/pub/dav/download.do?path=" + JSON.parse(localStorage.getItem("preview")).href
+
+      const textarea = document.createElement('textarea')
+      textarea.value = path
+      textarea.style.position = 'fixed' // 避免页面跳动
+      textarea.style.opacity = 0
+      document.body.appendChild(textarea)
+      textarea.focus()
+      textarea.select()
+
+      try {
+        const success = document.execCommand('copy')
+        success
+            ? this.$message?.success?.('复制成功') || alert('复制成功')
+            : this.$message?.error?.('复制失败') || alert('复制失败')
+      } catch (err) {
+        console.error('复制异常:', err)
+      }
+
+      document.body.removeChild(textarea)
     }
   }
 }
@@ -91,5 +139,22 @@ export default {
 .content_video {
   width: 100%;
   height: 100%;
+}
+
+.notPreview {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.notPreview img {
+  width: 120px;
+}
+
+.file-info {
+  margin: 15px;
 }
 </style>

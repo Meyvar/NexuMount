@@ -22,6 +22,14 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component)
 }
 
+if (process.env.NODE_ENV === 'development' || location.search.includes('debug')) {
+    import('vconsole').then(module => {
+        const VConsole = module.default
+        new VConsole()
+        console.log('✅ vConsole 已加载')
+    })
+}
+
 app.use(store)
     .use(router)
     .use(ElementPlus, {
