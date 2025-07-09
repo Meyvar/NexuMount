@@ -4,8 +4,16 @@
   </div>
   <div style="height: calc(100% - 50px); width: 100%; margin-top: 10px" ref="tableBox">
     <el-table :data="tableData" stripe style="width: 100%" :height="tableHeight">
-      <el-table-column prop="path" label="挂载路径" min-width="120"/>
-      <el-table-column prop="adapter" label="适配器" min-width="120"/>
+      <el-table-column prop="path" label="挂载路径" min-width="120">
+        <template #default="scope">
+          /{{ scope.row.path }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="adapter" label="适配器" min-width="120">
+        <template #default="scope">
+          {{ adapterMap[scope.row.adapter] }}
+        </template>
+      </el-table-column>
       <el-table-column prop="sort" label="排序" min-width="80"/>
       <el-table-column prop="status" label="状态" min-width="120"/>
       <el-table-column label="操作" width="120">
@@ -115,9 +123,6 @@ export default ({
       this.$common.axiosForm("/fileBucket/list.do").then((res) => {
         if (res.success) {
           this.tableData = res.data
-          this.tableData.forEach(item => {
-            item.adapter = this.adapterMap[item.adapter]
-          })
         }
       })
     },
