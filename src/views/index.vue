@@ -5,14 +5,14 @@
         <h1 style="padding-left: 10px">webdav</h1>
         <el-dropdown trigger="click">
           <el-button text class="user">
-            超级管理员
+            {{ userInfo.nike }}
             <el-icon class="el-icon--right">
               <arrow-down/>
             </el-icon>
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click="this.$router.push('/admin')">后台管理</el-dropdown-item>
+              <el-dropdown-item @click="this.$router.push('/admin')" v-if="userInfo.uuid === '7a207a4a3b4d4d92b6b84329829bdeab'">后台管理</el-dropdown-item>
               <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -29,10 +29,12 @@
 <script>
 export default {
   data() {
-    return {}
+    return {
+      userInfo: {}
+    }
   },
   mounted() {
-
+    this.userInfo = JSON.parse(localStorage.getItem("userInfo"));
   },
   methods: {
     logout() {

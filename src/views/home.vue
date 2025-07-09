@@ -30,6 +30,7 @@
       <preview v-if="preview" :height="listHeight" :getFileIcon="getFileIcon" :get-file-size="formatSize"></preview>
     </div>
   </div>
+  <floating-action @ratechange="getTableList" class="floating_action"></floating-action>
 </template>
 
 <script>
@@ -45,9 +46,10 @@ import FileTable from "@/components/fileTable.vue";
 import PathBreadcrumb from "@/components/pathBreadcrumb.vue";
 import Preview from "@/components/preview/preview.vue";
 import FileGrid from "@/components/fileGrid.vue";
+import FloatingAction from "@/components/floatingAction/floatingAction.vue";
 
 export default {
-  components: {FileGrid, Preview, PathBreadcrumb, FileTable},
+  components: {FloatingAction, FileGrid, Preview, PathBreadcrumb, FileTable},
   watch: {
     '$route.fullPath'() {
       this.initBreadcrumb();
@@ -235,5 +237,9 @@ export default {
 
 .el-breadcrumb__item {
   white-space: nowrap;
+}
+
+.floating_action{
+  //position: absolute;
 }
 </style>

@@ -1,4 +1,4 @@
-import {axiosForm, axiosGet, axiosJson, redirect} from '@/utils/request'
+import {axiosForm, axiosGet, axiosJson, axiosUploadFile, redirect} from '@/utils/request'
 
 export default {
     redirect() {
@@ -12,5 +12,8 @@ export default {
     },
     axiosGet(url, isLoading) {
         return axiosGet(url, isLoading);
+    },
+    axiosUploadFile(url, data, onUploadProgress){
+        return axiosUploadFile(url, data, onUploadProgress);
     }
 }
