@@ -20,7 +20,7 @@
     <div class="file-layout__table">
 
       <file-table :list-height="listHeight" :table-list="tableList" :getFileIcon="getFileIcon" :goPath="goPath"
-                  :format-size="formatSize" v-if="!preview && tableType == 'table'"
+                  :format-size="formatSize" v-if="!preview && tableType == 'table'" :showContextMenu="showContextMenu"
       ></file-table>
 
       <el-scrollbar :height="listHeight" v-if="!preview && tableType == 'grid'">
@@ -30,7 +30,19 @@
       <preview v-if="preview" :height="listHeight" :getFileIcon="getFileIcon" :get-file-size="formatSize"></preview>
     </div>
   </div>
-  <floating-action @ratechange="getTableList" class="floating_action"></floating-action>
+  <floating-action :refreshTable="getTableList" class="floating_action"></floating-action>
+
+  <!-- 自定义右键菜单 -->
+  <div
+      v-if="contextMenuVisible"
+      class="context-menu"
+      :style="{ top: contextMenuStyle.top, left: contextMenuStyle.left }"
+      ref="contextMenu"
+  >
+    <div class="menu-item" @click="onMenuClick('open')">打开</div>
+    <div class="menu-item" @click="onMenuClick('download')">下载</div>
+    <div class="menu-item" @click="onMenuClick('delete')">删除</div>
+  </div>
 </template>
 
 <script>
@@ -55,6 +67,9 @@ export default {
       this.initBreadcrumb();
     }
   },
+  beforeUnmount() {
+    window.removeEventListener('click', this.handleOutsideClick)
+  },
   data() {
     return {
       breadcrumb: [],
@@ -70,7 +85,12 @@ export default {
         audio: audioIcon,
         pdf: pdfIcon,
       },
-      preview: false
+      preview: false,
+      contextMenuVisible: false,
+      contextMenuStyle: {
+        top: '0px',
+        left: '0px'
+      },
     }
   },
   mounted() {
@@ -81,6 +101,7 @@ export default {
       showType = "table"
     }
     this.tableType = showType
+    window.addEventListener('click', this.handleOutsideClick)
   },
   methods: {
     initBreadcrumb() {
@@ -110,10 +131,9 @@ export default {
       } else {
         path = path.replace('/home', '')
       }
-
       let list = this.$store.getters.getFileListMap(path)
       if (list == null) {
-        this.$common.axiosJson("/pub/dav/list.do", {path: path}, true).then(res => {
+        this.$common.axiosJson("/pub/dav/list.do", {path: path}, false).then(res => {
           if (res.success) {
             list = res.data
             this.tableList = list
@@ -176,7 +196,20 @@ export default {
         this.tableType = 'grid'
         localStorage.tableType = 'grid'
       }
-    }
+    },
+    showContextMenu(row, column, event) {
+      event.preventDefault()
+      this.contextRow = row
+      this.contextMenuStyle.top = `${event.clientY}px`
+      this.contextMenuStyle.left = `${event.clientX}px`
+      this.contextMenuVisible = true
+    },
+    handleOutsideClick(e) {
+      const menu = this.$refs.contextMenu
+      if (menu && menu.contains(e.target)) return
+
+      this.contextMenuVisible = false
+    },
   }
 }
 
@@ -239,7 +272,28 @@ export default {
   white-space: nowrap;
 }
 
-.floating_action{
+.floating_action {
   //position: absolute;
+}
+
+.context-menu {
+  position: fixed;
+  background-color: white;
+  border: 1px solid #dcdfe6;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  z-index: 9999;
+  padding: 5px 0;
+  width: 120px;
+  border-radius: 4px;
+}
+
+.context-menu .menu-item {
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.context-menu .menu-item:hover {
+  background-color: #f5f7fa;
 }
 </style>

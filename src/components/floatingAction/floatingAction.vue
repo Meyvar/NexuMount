@@ -25,15 +25,45 @@
       :width="uploadWidth"
       class="responsive-upload-dialog"
   >
-    <UploadBox ref="uploadBox" upload-url="/api/pub/dav/upload.do"/>
+    <UploadBox ref="uploadBox" upload-url="/pub/dav/upload.do" :refresh-table="this.refreshTable"/>
+  </el-dialog>
+
+  <el-dialog
+      v-model="createFolder"
+      class="responsive-upload-dialog"
+      :width="uploadWidth"
+      title="新建文件夹"
+      :destroy-on-close="true"
+      :before-close="closeCreate"
+  >
+    <el-form :model="createForm" label-width="auto">
+      <el-form-item label="">
+        <el-input v-model="createForm.name" placeholder="请输入名称"/>
+      </el-form-item>
+    </el-form>
+
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="closeCreate">取消</el-button>
+        <el-button type="primary" @click="create">
+          确定
+        </el-button>
+      </div>
+    </template>
   </el-dialog>
 </template>
 
 <script>
 import UploadBox from "@/components/floatingAction/uploadFile.vue";
 
-let vm;
 export default {
+  props: {
+    refreshTable: {
+      type: Function,
+      default: () => {
+      }
+    }
+  },
   components: {UploadBox},
   beforeDestroy() {
     window.removeEventListener('resize', this.updateWidth)
@@ -42,38 +72,83 @@ export default {
     return {
       expanded: false,
       showUploadFile: false,
-      actions: [
-        {
-          label: '刷新列表',
-          handler(){
-            vm.$emit("refreshTable")
-          }
-        },
-        {
-          label: '上传文件',
-          handler() {
-            vm.showUploadFile = true;
-          }
-        },
-        {
-          label: '新建文件夹',
-          handler: () => this.$emit('create-folder')
-        }
-      ],
-      uploadWidth: 800
+      actions: [],
+      uploadWidth: 800,
+      createFolder: false,
+      createForm: {}
     }
   },
   mounted() {
-    vm = this;
+    this.createButton()
     window.addEventListener('resize', this.updateWidth)
     this.updateWidth()
   },
   methods: {
+    create() {
+      let api = "/pub/dav/createFolder.do"
+      if (this.createForm.type === 'file') {
+        api = "/pub/dav/createFile.do"
+      }
+      let path = decodeURIComponent(this.$route.path)
+      if (path == '/home') {
+        path = '/'
+      } else {
+        path = path.replace('/home', '')
+      }
+      this.$common.axiosForm(api, {path: path + "/" + this.createForm.name}, true).then(resp => {
+        if (resp.success) {
+          this.closeCreate()
+          this.$store.commit('setFileList', {path: path, list: null})
+          this.refreshTable()
+        } else {
+          this.$message.error(resp.msg)
+        }
+      })
+    },
+    closeCreate() {
+      this.createFolder = false
+      this.createForm = {}
+    },
+    createButton() {
+      this.actions = [
+        {
+          label: '刷新列表',
+          handler: () => {
+            let path = decodeURIComponent(this.$route.path)
+            if (path == '/home') {
+              path = '/'
+            } else {
+              path = path.replace('/home', '')
+            }
+            this.$store.commit('setFileList', {path: path, list: null})
+            this.refreshTable()
+          }
+        },
+        {
+          label: '上传文件',
+          handler: () => this.showUploadFile = true
+        },
+        {
+          label: '新建文件夹',
+          handler: () => {
+            this.createFolder = true
+            this.createForm.type = 'folder'
+          }
+        },
+        {
+          label: '新建文件',
+          handler: () => {
+            this.createFolder = true
+            this.createForm.type = 'file'
+          }
+        }
+      ]
+    },
     updateWidth() {
       let innerWidth = window.innerWidth
       if (innerWidth >= 940) {
         this.uploadWidth = 800
-      }else{
+      } else {
         this.uploadWidth = '85%'
       }
     }
@@ -172,5 +247,10 @@ export default {
     border-radius: 0 !important;
     padding: 0 !important;
   }
+}
+</style>
+<style>
+.createButton .el-form-item__content {
+  justify-content: flex-end;
 }
 </style>

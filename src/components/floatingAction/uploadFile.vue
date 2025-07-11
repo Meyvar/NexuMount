@@ -1,6 +1,6 @@
 <template>
   <div class="upload-box">
-    <!-- 上传按钮区域 -->
+    <!-- 上传按钮 -->
     <div class="upload-actions">
       <el-button type="primary" @click="openFileSelect">上传文件</el-button>
       <el-button @click="openFolderSelect">上传文件夹</el-button>
@@ -21,15 +21,11 @@
       />
     </div>
 
-    <!-- Tab栏展示上传中与上传完成 -->
+    <!-- Tab -->
     <el-tabs v-model="activeTab">
       <el-tab-pane label="上传中" name="uploading">
         <div v-if="uploadingList.length" class="upload-section">
-          <div
-              v-for="item in uploadingList"
-              :key="item.id"
-              class="upload-item"
-          >
+          <div v-for="item in uploadingList" :key="item.id" class="upload-item">
             <span class="filename">{{ item.name }}</span>
             <el-progress
                 :percentage="item.progress"
@@ -44,30 +40,39 @@
 
       <el-tab-pane label="上传完成" name="finished">
         <div v-if="finishedList.length" class="upload-section">
-          <div
-              v-for="item in finishedList"
-              :key="item.id"
-              class="upload-item"
-          >
+          <div v-for="item in finishedList" :key="item.id" class="upload-item">
             <span class="filename">{{ item.name }}</span>
-            <el-icon color="#67C23A"><CircleCheck /></el-icon>
+            <el-icon color="#67C23A">
+              <CircleCheck/>
+            </el-icon>
           </div>
         </div>
         <div v-else class="empty">暂无已上传文件</div>
+      </el-tab-pane>
+
+      <el-tab-pane label="上传失败" name="failed">
+        <div v-if="failedList.length" class="upload-section">
+          <div v-for="item in failedList" :key="item.id" class="upload-item">
+            <span class="filename">{{ item.name }}</span>
+            <span class="error-text">{{ item.msg }}</span>
+            <el-button size="small" type="danger" @click="retryFailed(item)">重试</el-button>
+          </div>
+        </div>
+        <div v-else class="empty">暂无失败文件</div>
       </el-tab-pane>
     </el-tabs>
   </div>
 </template>
 
 <script>
-import { ElMessage } from 'element-plus'
-import { CircleCheck } from '@element-plus/icons-vue'
+import {ElMessage} from 'element-plus'
+import {CircleCheck} from '@element-plus/icons-vue'
 
 let uid = 0
 
 export default {
   name: 'UploadBoxTabs',
-  components: { CircleCheck },
+  components: {CircleCheck},
   props: {
     uploadUrl: {
       type: String,
@@ -76,13 +81,18 @@ export default {
     headers: {
       type: Object,
       default: () => ({})
+    },
+    refreshTable: {
+      type: Function,
+      default: () => {}
     }
   },
   data() {
     return {
       activeTab: 'uploading',
       uploadingList: [],
-      finishedList: []
+      finishedList: [],
+      failedList: []
     }
   },
   methods: {
@@ -102,57 +112,73 @@ export default {
       this.uploadFiles(files, true)
       this.$refs.folderInput.value = null
     },
+
     uploadFiles(files, isFolder) {
       Array.from(files).forEach(file => {
-        const task = {
-          id: uid++,
-          name: isFolder ? file.webkitRelativePath : file.name,
-          progress: 0,
-          error: false
-        }
-        this.uploadingList.push(task)
-
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('path', this.$route.path)
-        if (isFolder) {
-          formData.append('toPath', this.getPathFromFile(file))
-        }
-
-        const xhr = new XMLHttpRequest()
-        xhr.open('POST', this.uploadUrl, true)
-
-        Object.entries(this.headers).forEach(([key, val]) => {
-          xhr.setRequestHeader(key, val)
-        })
-
-        xhr.upload.onprogress = e => {
-          if (e.lengthComputable) {
-            task.progress = Math.round((e.loaded / e.total) * 100)
-          }
-        }
-
-        xhr.onload = () => {
-          const isSuccess = xhr.status >= 200 && xhr.status < 300
-          task.progress = 100
-          if (isSuccess) {
-            this.finishedList.push({ ...task })
-            ElMessage.success(`${task.name} 上传成功`)
-          } else {
-            task.error = true
-            ElMessage.error(`${task.name} 上传失败`)
-          }
-          this.uploadingList = this.uploadingList.filter(t => t.id !== task.id)
-        }
-
-        xhr.onerror = () => {
-          task.error = true
-          ElMessage.error(`${task.name} 上传异常`)
-        }
-
-        xhr.send(formData)
+        this._uploadSingleFile(file, isFolder)
       })
     },
+
+    _uploadSingleFile(file, isFolder) {
+      const task = {
+        id: uid++,
+        file,
+        name: isFolder ? file.webkitRelativePath : file.name,
+        isFolder,
+        progress: 0,
+        error: false
+      }
+      this.uploadingList.push(task)
+
+      const formData = new FormData()
+      formData.append('file', file)
+      let path = this.$route.path.replace('/home', '')
+      formData.append('path', path)
+      if (isFolder) {
+        formData.append('toPath', this.getPathFromFile(file))
+      }
+
+      const headers = {
+        'X-Oc-Mtime': new Date(file.lastModified).getTime()
+      }
+
+      this.$common.axiosUploadFile(this.uploadUrl, formData, e => {
+        if (e.lengthComputable) {
+          task.progress = Math.round((e.loaded / e.total) * 100)
+        }
+      }, headers)
+          .then(res => {
+            task.progress = 100
+            if (res.success) {
+              this.finishedList.push({...task})
+              let path = decodeURIComponent(this.$route.path)
+              if (path == '/home') {
+                path = '/'
+              } else {
+                path = path.replace('/home', '')
+              }
+              this.$store.commit('setFileList', {path: path, list: null})
+              this.refreshTable()
+            } else {
+              task.error = true
+              task.msg = `${res.msg}`
+              this.failedList.push({...task})
+            }
+          })
+          .catch(() => {
+            task.error = true
+            this.failedList.push({...task})
+          })
+          .finally(() => {
+            this.uploadingList = this.uploadingList.filter(t => t.id !== task.id)
+          })
+    },
+
+    retryFailed(item) {
+      this.failedList = this.failedList.filter(t => t.id !== item.id)
+      this._uploadSingleFile(item.file, item.isFolder)
+    },
+
     getPathFromFile(file) {
       return file.webkitRelativePath
           ? file.webkitRelativePath.substring(0, file.webkitRelativePath.lastIndexOf('/'))
@@ -184,9 +210,8 @@ export default {
 
 .upload-item {
   display: flex;
-  justify-content: space-between; /* 左右分散 */
+  justify-content: space-between;
   align-items: center;
-  width: 100%; /* 占满父容器 */
   padding: 8px 0;
   border-bottom: 1px solid #f0f0f0;
 }
@@ -201,7 +226,7 @@ export default {
 
 .error-text {
   color: red;
-  flex-shrink: 0;
+  margin-right: 10px;
 }
 
 .empty {

@@ -13,7 +13,7 @@ export default {
     axiosGet(url, isLoading) {
         return axiosGet(url, isLoading);
     },
-    axiosUploadFile(url, data, onUploadProgress){
-        return axiosUploadFile(url, data, onUploadProgress);
+    axiosUploadFile(url, data, onUploadProgress, headers){
+        return axiosUploadFile(url, data, onUploadProgress, headers);
     }
 }

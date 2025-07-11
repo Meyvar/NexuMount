@@ -48,8 +48,8 @@ service.interceptors.response.use(resp => {
 )
 
 
-function uploadFile(url, data, onUploadProgress) {
-    return service.post(url, data, {headers: {"Content-Type": "multipart/form-data"}, onUploadProgress})
+function uploadFile(url, data, onUploadProgress, headers = {}) {
+    return service.post(url, data, {headers: {"Content-Type": "multipart/form-data", ...headers}, onUploadProgress})
 }
 
 function axiosPost(url, data, isForm, isLoading) {
@@ -90,6 +90,6 @@ export function axiosGet(url, isLoading) {
     return get(url, isLoading)
 }
 
-export function axiosUploadFile(url, data, onUploadProgress) {
-    return uploadFile(url, data, onUploadProgress)
+export function axiosUploadFile(url, data, onUploadProgress, headers) {
+    return uploadFile(url, data, onUploadProgress, headers)
 }

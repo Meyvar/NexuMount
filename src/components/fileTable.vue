@@ -5,6 +5,7 @@
             class="file_item"
             @row-click="goPath"
             show-overflow-tooltip
+            @row-contextmenu="showContextMenu"
   >
     <el-table-column prop="name" label="名称" style="padding-left: 10px">
       <template #default="scope">
@@ -56,6 +57,10 @@ export default {
       type: Function,
       default: () => {
       }
+    },
+    showContextMenu:{
+      type: Function,
+      default: () => {}
     }
   },
   data() {
