@@ -65,7 +65,6 @@
 </template>
 
 <script>
-import {ElMessage} from 'element-plus'
 import {CircleCheck} from '@element-plus/icons-vue'
 
 let uid = 0
@@ -128,6 +127,7 @@ export default {
         progress: 0,
         error: false
       }
+
       this.uploadingList.push(task)
 
       const formData = new FormData()
@@ -139,35 +139,34 @@ export default {
       }
 
       const headers = {
-        'X-Oc-Mtime': new Date(file.lastModified).getTime()
+        'X-Oc-Mtime': Math.floor(file.lastModified / 1000)
       }
 
       this.$common.axiosUploadFile(this.uploadUrl, formData, e => {
         if (e.lengthComputable) {
-          task.progress = Math.round((e.loaded / e.total) * 100)
+          // ✅ 用 splice 替换整个对象，强制 Vue 3 响应式更新
+          const newProgress = Math.round((e.loaded / e.total) * 100)
+          const index = this.uploadingList.findIndex(t => t.id === task.id)
+          if (index !== -1) {
+            const updatedTask = { ...this.uploadingList[index], progress: newProgress }
+            this.uploadingList.splice(index, 1, updatedTask)
+          }
         }
       }, headers)
           .then(res => {
-            task.progress = 100
+            const index = this.uploadingList.findIndex(t => t.id === task.id)
             if (res.success) {
-              this.finishedList.push({...task})
-              let path = decodeURIComponent(this.$route.path)
-              if (path == '/home') {
-                path = '/'
-              } else {
-                path = path.replace('/home', '')
-              }
-              this.$store.commit('setFileList', {path: path, list: null})
+              const finished = { ...task, progress: 100 }
+              this.finishedList.push(finished)
               this.refreshTable()
             } else {
-              task.error = true
-              task.msg = `${res.msg}`
-              this.failedList.push({...task})
+              const failed = { ...task, error: true, msg: res.msg }
+              this.failedList.push(failed)
             }
           })
           .catch(() => {
-            task.error = true
-            this.failedList.push({...task})
+            const failed = { ...task, error: true, msg: '上传失败' }
+            this.failedList.push(failed)
           })
           .finally(() => {
             this.uploadingList = this.uploadingList.filter(t => t.id !== task.id)
