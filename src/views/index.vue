@@ -2,7 +2,9 @@
   <div class="common-layout">
     <el-container>
       <el-header>
-        <h1 style="padding-left: 10px">webdav</h1>
+        <h1 style="padding-left: 10px; display: flex;">
+          <img src="@/assets/logo.png" alt="" height="40"></img>
+        </h1>
         <el-dropdown trigger="click">
           <el-button text class="user">
             {{ userInfo.nike }}
@@ -21,7 +23,7 @@
       <el-main>
         <router-view/>
       </el-main>
-      <el-footer>©Meyvar 2025</el-footer>
+      <el-footer>©NexuMount 2025</el-footer>
     </el-container>
   </div>
 </template>
@@ -40,7 +42,7 @@ export default {
     logout() {
       this.$common.axiosGet("/public/logout.do", true).then((res) => {
         if (res.success){
-          this.$router.push("/")
+          window.location.reload();
         }
       });
     }
