@@ -4,16 +4,21 @@
       <img class="content_img" v-if="type === 'image'" :src="href">
       <vue3-video-player :src="href" v-else-if="type === 'video' || type === 'audio'"></vue3-video-player>
       <preview-text :src="href" v-else-if="type === 'text'"></preview-text>
+      <iframe v-else-if="type === 'office'" frameborder="0" width="100%" height="100%"
+              :src="'https://view.officeapps.live.com/op/view.aspx?src=' + encodeURIComponent(href)">
+      </iframe>
+      <pdf v-else-if="type === 'pdf'" :href="href"/>
       <div class="notPreview" v-else>
         <img :src="fileIcon">
-        <div class="file-info">{{ fileData.name }} ({{ getFileSize(fileData.size)}})</div>
+        <div class="file-info">{{ fileData.name }} ({{ getFileSize(fileData.size) }})</div>
       </div>
     </div>
     <div class="button_list">
-      <el-button type="primary" @click="copy"><img src="@/assets/icon/link.png" width="15" style="padding-right: 5px">复制链接
+      <el-button type="primary" @click="copy">
+        <img src="@/assets/icon/link.png" width="15" style="padding-right: 5px">复制链接
       </el-button>
-      <el-button type="primary" @click="download"><img src="@/assets/icon/download.png" width="20"
-                                                       style="padding-right: 5px">下载
+      <el-button type="primary" @click="download">
+        <img src="@/assets/icon/download.png" width="20" style="padding-right: 5px">下载
       </el-button>
     </div>
   </div>
@@ -21,9 +26,10 @@
 
 <script>
 import PreviewText from "@/components/preview/previewText.vue";
+import Pdf from "@/components/preview/pdf.vue";
 
 export default {
-  components: {PreviewText},
+  components: {Pdf, PreviewText},
   props: {
     height: {
       type: Number,
@@ -71,6 +77,13 @@ export default {
             this.type = "audio"
           } else if (data.contentType.indexOf('text') > -1) {
             this.type = "text"
+          } else if (data.contentType.indexOf('sheet') > -1
+              || data.contentType.indexOf('wordprocessingml') > -1
+              || data.contentType.indexOf('presentation') > -1) {
+            this.href = location.origin + data.href
+            this.type = "office"
+          } else if (data.contentType.indexOf('pdf') > -1) {
+            this.type = "pdf"
           } else {
             this.fileIcon = this.getFileIcon(res.data);
           }
@@ -84,7 +97,7 @@ export default {
       window.open("/api/pub/dav/download.do?path=" + path, '_blank');
     },
     async copy() {
-      let path = location.origin + "/api/pub/dav/download.do?path=" + JSON.parse(localStorage.getItem("preview")).href
+      let path = location.origin + "/api/pub/dav/download.do?path=" + JSON.parse(localStorage.getItem("preview")).href + "&token=" + this.$common.getCookies("Authorization-Key")
 
       const textarea = document.createElement('textarea')
       textarea.value = path

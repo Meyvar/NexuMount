@@ -15,5 +15,11 @@ export default {
     },
     axiosUploadFile(url, data, onUploadProgress, headers){
         return axiosUploadFile(url, data, onUploadProgress, headers);
+    },
+    getCookies(name) {
+        const value = document.cookie
+            .split('; ')
+            .find(row => row.startsWith(name + '='));
+        return value ? decodeURIComponent(value.split('=')[1]) : null;
     }
 }

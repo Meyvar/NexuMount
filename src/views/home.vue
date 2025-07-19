@@ -53,6 +53,9 @@ import txtIcon from '@/assets/icon/txt.png'
 import fileIcon from '@/assets/icon/file.png'
 import audioIcon from '@/assets/icon/audio.png'
 import pdfIcon from '@/assets/icon/pdf.png'
+import excel from '@/assets/icon/excel.png'
+import ppt from '@/assets/icon/powerpoint.png'
+import word from '@/assets/icon/word.png'
 
 import FileTable from "@/components/fileTable.vue";
 import PathBreadcrumb from "@/components/pathBreadcrumb.vue";
@@ -84,6 +87,9 @@ export default {
         file: fileIcon,
         audio: audioIcon,
         pdf: pdfIcon,
+        excel: excel,
+        ppt: ppt,
+        word: word,
       },
       preview: false,
       contextMenuVisible: false,
@@ -168,6 +174,15 @@ export default {
         }
         if (row.contentType.indexOf('pdf') > -1) {
           return this.fileIcon.pdf
+        }
+        if (row.contentType.indexOf('sheet') > -1) {
+          return this.fileIcon.excel
+        }
+        if (row.contentType.indexOf('wordprocessingml') > -1) {
+          return this.fileIcon.word
+        }
+        if (row.contentType.indexOf('presentation') > -1) {
+          return this.fileIcon.ppt
         }
         return this.fileIcon.file
       }

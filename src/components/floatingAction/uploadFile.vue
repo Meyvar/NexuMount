@@ -158,6 +158,7 @@ export default {
             if (res.success) {
               const finished = { ...task, progress: 100 }
               this.finishedList.push(finished)
+              this.$store.commit('setFileList', {path: path, list: null})
               this.refreshTable()
             } else {
               const failed = { ...task, error: true, msg: res.msg }
