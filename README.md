@@ -2,6 +2,10 @@
     <img src="src/assets/logo.png" height="60"/>
     <p><em>🗂️ 一个支持多存储的文件列表程序，使用 Springboot3.x 和 element-plus。</em></p>
 </div>
+<div align="center">
+    <img alt="Static Badge" src="https://img.shields.io/badge/NexuMount_Server-blue?label=link&labelColor=green&link=https%3A%2F%2Fgithub.com%2FMeyvar%2FNexuMount-server">
+    <img alt="Static Badge" src="https://img.shields.io/badge/AGPL_3.0-green?label=license&link=https%3A%2F%2Fgithub.com%2FMeyvar%2FNexuMount%2Fblob%2Fmain%2FLICENSE">
+</div>
 
 ---
 
@@ -24,7 +28,6 @@
 - [ ] Office 文档预览（docx、pptx、xlsx、...）
 - [x] 文件永久链接复制和直接文件下载
 - [ ] 黑暗模式
-- [ ] 国际化
 - [x] 受保护的路由（密码保护和身份验证）
 - [x] WebDav
 - [ ] 文件/文件夹打包下载
