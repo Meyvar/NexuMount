@@ -5,8 +5,9 @@
         :key="item.id"
         class="file-item"
         @click="goPath(item)"
+        @contextmenu.prevent="contextmenu(item, item , $event)"
     >
-      <img :src="getFileIcon(item)" class="file-icon" />
+      <img :src="getFileIcon(item)" class="file-icon"/>
       <div class="file-name" :title="item.name">
         {{ item.name }}
       </div>
@@ -24,12 +25,16 @@ export default {
     },
     getFileIcon: {
       type: Function,
-      default: () => () => '',
+      default: () => {},
     },
     goPath: {
       type: Function,
       default: () => {},
     },
+    contextmenu: {
+      type: Function,
+      default: () => {},
+    }
   },
 }
 </script>
@@ -73,9 +78,9 @@ export default {
 
 .file-name {
   font-size: 14px;
-  white-space: nowrap;         /* 不换行 */
-  overflow: hidden;            /* 超出隐藏 */
-  text-overflow: ellipsis;     /* 显示省略号 */
+  white-space: nowrap; /* 不换行 */
+  overflow: hidden; /* 超出隐藏 */
+  text-overflow: ellipsis; /* 显示省略号 */
   max-width: 100%;
 }
 </style>

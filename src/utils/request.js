@@ -52,7 +52,7 @@ function uploadFile(url, data, onUploadProgress, headers = {}) {
     return service.post(url, data, {headers: {"Content-Type": "multipart/form-data", ...headers}, onUploadProgress})
 }
 
-function axiosPost(url, data, isForm, isLoading) {
+function axiosPost(url, data, isForm, isLoading, headers) {
     if (isLoading) {
         loading = ElLoading.service({
             lock: true,
@@ -63,10 +63,10 @@ function axiosPost(url, data, isForm, isLoading) {
     if (isForm) {
         data = Qs.stringify(data);
     }
-    return service.post(url, data)
+    return service.post(url, data, {headers: {...headers}})
 }
 
-function get(url, isLoading) {
+function get(url, isLoading, headers) {
     if (isLoading) {
         loading = ElLoading.service({
             lock: true,
@@ -74,20 +74,20 @@ function get(url, isLoading) {
             background: 'rgba(0, 0, 0, 0.7)',
         });
     }
-    return service.get(url)
+    return service.get(url, {...headers})
 }
 
-export function axiosForm(url, data, isLoading) {
-    return axiosPost(url, data, true, isLoading);
+export function axiosForm(url, data, isLoading, headers) {
+    return axiosPost(url, data, true, isLoading, headers);
 }
 
 
-export function axiosJson(url, data, isLoading) {
-    return axiosPost(url, data, false, isLoading);
+export function axiosJson(url, data, isLoading, headers) {
+    return axiosPost(url, data, false, isLoading, headers);
 }
 
-export function axiosGet(url, isLoading) {
-    return get(url, isLoading)
+export function axiosGet(url, isLoading, headers) {
+    return get(url, isLoading, headers)
 }
 
 export function axiosUploadFile(url, data, onUploadProgress, headers) {

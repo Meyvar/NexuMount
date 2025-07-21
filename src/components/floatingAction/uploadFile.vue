@@ -158,6 +158,9 @@ export default {
             if (res.success) {
               const finished = { ...task, progress: 100 }
               this.finishedList.push(finished)
+              if (path === ""){
+                path = "/"
+              }
               this.$store.commit('setFileList', {path: path, list: null})
               this.refreshTable()
             } else {

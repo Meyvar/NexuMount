@@ -4,16 +4,16 @@ export default {
     redirect() {
         redirect();
     },
-    axiosForm(url, data, isLoading) {
-        return axiosForm(url, data, isLoading);
+    axiosForm(url, data, isLoading, headers) {
+        return axiosForm(url, data, isLoading, headers);
     },
-    axiosJson(url, data, isLoading) {
-        return axiosJson(url, data, isLoading);
+    axiosJson(url, data, isLoading, headers) {
+        return axiosJson(url, data, isLoading, headers);
     },
     axiosGet(url, isLoading) {
         return axiosGet(url, isLoading);
     },
-    axiosUploadFile(url, data, onUploadProgress, headers){
+    axiosUploadFile(url, data, onUploadProgress, headers) {
         return axiosUploadFile(url, data, onUploadProgress, headers);
     },
     getCookies(name) {

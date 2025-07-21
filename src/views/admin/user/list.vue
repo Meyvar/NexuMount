@@ -49,9 +49,8 @@
           <el-checkbox-group v-model="editForm.permissions">
             <el-checkbox value="admin" name="permissions">后台管理</el-checkbox>
             <el-checkbox value="createOrUpload" name="permissions">创建目录或上传</el-checkbox>
-            <el-checkbox value="move" name="permissions">文件移动</el-checkbox>
+            <el-checkbox value="move" name="permissions">文件移动或重命名</el-checkbox>
             <el-checkbox value="copy" name="permissions">文件复制</el-checkbox>
-            <el-checkbox value="raname" name="permissions">文件重命名</el-checkbox>
             <el-checkbox value="remove" name="permissions">文件删除</el-checkbox>
           </el-checkbox-group>
         </el-form-item>
@@ -71,13 +70,11 @@
       :width="uploadWidth"
       class="responsive-upload-dialog">
     <el-tree
-        v-model="editForm.rootPath"
         lazy
         :load="rootPathLoad"
         check-strictly
         node-key="href"
         :props=treeProps
-        @change="console.log(editForm)"
         :expand-on-click-node=false
         ref="pathTree"
     />

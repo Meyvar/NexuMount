@@ -24,13 +24,64 @@
       ></file-table>
 
       <el-scrollbar :height="listHeight" v-if="!preview && tableType == 'grid'">
-        <file-grid :table-list="tableList" :getFileIcon="getFileIcon" :goPath="goPath"></file-grid>
+        <file-grid :table-list="tableList" :getFileIcon="getFileIcon" :goPath="goPath"
+                   :contextmenu="showContextMenu"></file-grid>
       </el-scrollbar>
 
       <preview v-if="preview" :height="listHeight" :getFileIcon="getFileIcon" :get-file-size="formatSize"></preview>
     </div>
   </div>
+
+  <el-dialog
+      v-model="rename.show"
+      class="responsive-upload-dialog"
+      :width="dialogWidth"
+      title="重命名"
+      :destroy-on-close="true"
+      :before-close="closeMove"
+  >
+    <el-form :model="rename" label-width="auto">
+      <el-form-item label="">
+        <el-input v-model="rename.newName" placeholder="请输入名称"/>
+      </el-form-item>
+    </el-form>
+
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="closeRename">取消</el-button>
+        <el-button type="primary" @click="submitRename">
+          确定
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
+
   <floating-action :refreshTable="getTableList" class="floating_action"></floating-action>
+
+  <el-dialog
+      v-model="move.show"
+      title="选择文件夹"
+      :width="dialogWidth"
+      class="responsive-upload-dialog">
+    <el-tree
+        lazy
+        :load="rootPathLoad"
+        check-strictly
+        node-key="href"
+        :props=move.treeProps
+        :expand-on-click-node=false
+        ref="pathTree"
+    />
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button type="primary" @click="submitMove">
+          确定
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+
 
   <!-- 自定义右键菜单 -->
   <div
@@ -39,9 +90,12 @@
       :style="{ top: contextMenuStyle.top, left: contextMenuStyle.left }"
       ref="contextMenu"
   >
-    <div class="menu-item" @click="onMenuClick('open')">打开</div>
-    <div class="menu-item" @click="onMenuClick('download')">下载</div>
+    <div class="menu-item" @click="onMenuClick('rename')">重命名</div>
+    <div class="menu-item" @click="onMenuClick('move')">移动</div>
+    <div class="menu-item" @click="onMenuClick('copy')">复制</div>
+    <div class="menu-item" @click="onMenuClick('copyUrl')">复制链接</div>
     <div class="menu-item" @click="onMenuClick('delete')">删除</div>
+    <div class="menu-item" @click="onMenuClick('download')">下载</div>
   </div>
 </template>
 
@@ -72,6 +126,7 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('click', this.handleOutsideClick)
+    window.removeEventListener('resize', this.updateMoveWidth)
   },
   data() {
     return {
@@ -97,6 +152,22 @@ export default {
         top: '0px',
         left: '0px'
       },
+      dialogWidth: 800,
+      move: {
+        show: false,
+        newName: '',
+        name: '',
+        treeProps: {
+          label: 'name'
+        },
+        type: ''
+      },
+      rename: {
+        show: false,
+        newName: '',
+        name: '',
+      },
+      contextRow: {},
     }
   },
   mounted() {
@@ -108,6 +179,7 @@ export default {
     }
     this.tableType = showType
     window.addEventListener('click', this.handleOutsideClick)
+    window.addEventListener('resize', this.updateMoveWidth)
   },
   methods: {
     initBreadcrumb() {
@@ -225,6 +297,146 @@ export default {
 
       this.contextMenuVisible = false
     },
+    closeRename() {
+      this.rename = {
+        width: 800,
+        show: false,
+        newName: '',
+        name: ''
+      }
+    },
+    closeMove() {
+      this.move = {
+        width: 800,
+        show: false,
+        newName: '',
+        name: ''
+      }
+    },
+    rootPathLoad(node, resolve, reject) {
+      let path = node.data.href
+      if (path == null || path === '') {
+        let data = {
+          name: '/',
+          href: '/'
+        }
+        resolve([data])
+      } else {
+        this.$common.axiosJson("/pub/dav/list.do", {path}, false).then((res) => {
+          if (res.success) {
+            let data = res.data.filter(item => item.type === 'folder')
+            resolve(data)
+          } else {
+            this.$message.error(res.msg)
+          }
+        })
+      }
+    },
+    submitRename() {
+      let Destination = this.rename.href
+      let path = Destination.replace(this.rename.name, this.rename.newName)
+      this.$common.axiosForm("/pub/dav/move.do", {path: Destination}, true, {Destination: path}).then(res => {
+        if (res.success) {
+          this.closeRename()
+          this.refreshTable()
+        } else {
+          this.$message.error(res.msg)
+        }
+      })
+    },
+    submitMove() {
+      this.move.newName = this.$refs.pathTree.getCurrentKey()
+      this.$store.commit('setFileList', {path: this.move.newName, list: null})
+      if (!this.move.newName.endsWith("/")) {
+        this.move.newName += "/"
+      }
+      this.move.newName += this.move.name
+      this.$common.axiosForm("/pub/dav/" + this.move.type + ".do", {path: this.move.href}, true, {Destination: this.move.newName}).then(res => {
+        if (res.success) {
+          this.closeMove()
+          this.refreshTable()
+        } else {
+          this.$message.error(res.msg)
+        }
+      })
+    },
+    refreshTable() {
+      let path = decodeURIComponent(this.$route.path)
+      if (path === '/home') {
+        path = '/'
+      } else {
+        path = path.replace('/home', '')
+      }
+      this.$store.commit('setFileList', {path: path, list: null})
+      this.getTableList()
+    },
+    updateMoveWidth() {
+      let innerWidth = window.innerWidth
+      if (innerWidth >= 940) {
+        this.dialogWidth = 800
+      } else {
+        this.dialogWidth = '85%'
+      }
+    },
+    onMenuClick(type) {
+      this.contextMenuVisible = false
+      if (type === 'rename') {
+        this.rename.show = true
+        this.rename.name = this.contextRow.name
+        this.rename.newName = this.contextRow.name
+        this.rename.href = this.contextRow.href
+      } else if (type === 'delete') {
+        this.$messageBox.confirm(
+            '确定要删除吗?',
+            '提示：',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning',
+            }).then(() => {
+          this.$common.axiosForm("/pub/dav/delete.do", {path: this.contextRow.href}, false).then(res => {
+            if (res.success) {
+              this.refreshTable()
+            } else {
+              this.$message.error(res.msg)
+            }
+          })
+        })
+            .catch(() => {
+            })
+      } else if (type === 'copyUrl') {
+        let path = location.origin + "/api/pub/dav/download.do?path=" + this.contextRow.href + "&token=" + this.$common.getCookies("Authorization-Key")
+
+        const textarea = document.createElement('textarea')
+        textarea.value = path
+        textarea.style.position = 'fixed' // 避免页面跳动
+        textarea.style.opacity = 0
+        document.body.appendChild(textarea)
+        textarea.focus()
+        textarea.select()
+
+        try {
+          const success = document.execCommand('copy')
+          success
+              ? this.$message?.success?.('复制成功') || alert('复制成功')
+              : this.$message?.error?.('复制失败') || alert('复制失败')
+        } catch (err) {
+          console.error('复制异常:', err)
+        }
+
+        document.body.removeChild(textarea)
+      } else if (type === 'download') {
+        let path = this.contextRow.href
+        window.open("/api/pub/dav/download.do?path=" + path, '_blank');
+      } else if (type === 'move' || type === 'copy') {
+        this.move.show = true
+        this.move.name = this.contextRow.name
+        this.move.newName = this.contextRow.name
+        this.move.href = this.contextRow.href
+        this.move.type = type
+      }
+
+    }
   }
 }
 
@@ -295,7 +507,7 @@ export default {
   position: fixed;
   background-color: white;
   border: 1px solid #dcdfe6;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   z-index: 9999;
   padding: 5px 0;
   width: 120px;
