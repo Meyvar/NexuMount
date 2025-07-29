@@ -57,7 +57,7 @@
   </el-dialog>
 
 
-  <floating-action :refreshTable="getTableList" class="floating_action"></floating-action>
+  <floating-action :refreshTable="refreshTable" class="floating_action"></floating-action>
 
   <el-dialog
       v-model="move.show"
@@ -202,27 +202,20 @@ export default {
         this.getTableList()
       }
     },
-    getTableList() {
+    getTableList(refresh = false) {
       let path = decodeURIComponent(this.$route.path)
       if (path == '/home') {
         path = '/'
       } else {
         path = path.replace('/home', '')
       }
-      let list = this.$store.getters.getFileListMap(path)
-      if (list == null) {
-        this.$common.axiosJson("/pub/dav/list.do", {path: path}, false).then(res => {
-          if (res.success) {
-            list = res.data
-            this.tableList = list
-            this.$store.commit('setFileList', {path: path, list: list})
-          } else {
-            this.$message.error(res.msg);
-          }
-        })
-      } else {
-        this.tableList = list
-      }
+      this.$common.axiosJson("/pub/dav/list.do", {path: path, refresh}, false).then(res => {
+        if (res.success) {
+          this.tableList = res.data
+        } else {
+          this.$message.error(res.msg);
+        }
+      })
 
     },
     getFileIcon(row) {
@@ -346,12 +339,11 @@ export default {
     },
     submitMove() {
       this.move.newName = this.$refs.pathTree.getCurrentKey()
-      this.$store.commit('setFileList', {path: this.move.newName, list: null})
       if (!this.move.newName.endsWith("/")) {
         this.move.newName += "/"
       }
       this.move.newName += this.move.name
-      this.$common.axiosForm("/pub/dav/" + this.move.type + ".do", {path: this.move.href}, true, {Destination: this.move.newName}).then(res => {
+      this.$common.axiosForm("/pub/dav/" + this.move.type + ".do", {path: this.move.href}, true, {Destination: encodeURIComponent(this.move.newName)}).then(res => {
         if (res.success) {
           this.closeMove()
           this.refreshTable()
@@ -361,14 +353,7 @@ export default {
       })
     },
     refreshTable() {
-      let path = decodeURIComponent(this.$route.path)
-      if (path === '/home') {
-        path = '/'
-      } else {
-        path = path.replace('/home', '')
-      }
-      this.$store.commit('setFileList', {path: path, list: null})
-      this.getTableList()
+      this.getTableList(true)
     },
     updateMoveWidth() {
       let innerWidth = window.innerWidth

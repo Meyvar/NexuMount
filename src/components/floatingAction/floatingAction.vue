@@ -98,7 +98,6 @@ export default {
       this.$common.axiosForm(api, {path: path + "/" + this.createForm.name}, true).then(resp => {
         if (resp.success) {
           this.closeCreate()
-          this.$store.commit('setFileList', {path: path, list: null})
           this.refreshTable()
         } else {
           this.$message.error(resp.msg)
@@ -114,13 +113,6 @@ export default {
         {
           label: '刷新列表',
           handler: () => {
-            let path = decodeURIComponent(this.$route.path)
-            if (path == '/home') {
-              path = '/'
-            } else {
-              path = path.replace('/home', '')
-            }
-            this.$store.commit('setFileList', {path: path, list: null})
             this.refreshTable()
           }
         },

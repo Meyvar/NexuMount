@@ -26,14 +26,14 @@
   </div>
 
 
-  <el-drawer v-model="showEditForm" direction="rtl" size="70%" @close="editForm = {}">
+  <el-drawer v-model="showEditForm" direction="rtl" size="70%" @close="() => {adapterFields = []; editForm = {};}">
     <template #header>
       <h4>用户编辑</h4>
     </template>
     <template #default>
       <el-form :model="editForm" label-width="auto" label-suffix=":" :rules="formRules">
         <el-form-item label="适配器" prop="adapter">
-          <el-select v-model="editForm.adapter" placeholder="请选择适配器">
+          <el-select v-model="editForm.adapter" placeholder="请选择适配器" @change="adapterChange">
             <el-option v-for="(adapter, i) in adapterList" :label="adapter.title" :value="adapter.name" :key="i"/>
           </el-select>
         </el-form-item>
@@ -63,6 +63,10 @@
           <el-input v-model="editForm.aesKey" placeholder="AES加密key（128位）" readonly/>
           <el-alert type="warning" :closable="false">请妥善保存密钥，丢失后已上传加密文件无法还原！</el-alert>
         </el-form-item>
+
+        <el-form-item v-for="(item, index) in adapterFields" :key="index" :label="item.label">
+          <el-input v-model="editForm.fieldJson[item.name]"/>
+        </el-form-item>
       </el-form>
     </template>
     <template #footer>
@@ -75,7 +79,7 @@
 </template>
 
 <script>
-export default ({
+export default {
   data() {
     return {
       formRules: {
@@ -98,6 +102,7 @@ export default ({
       tableHeight: 0,
       adapterList: [],
       adapterMap: {},
+      adapterFields: [],
     }
   },
   mounted() {
@@ -105,6 +110,13 @@ export default ({
     this.tableHeight = this.$refs.tableBox.offsetHeight
   },
   methods: {
+    adapterChange(adapter) {
+      this.adapterList.forEach((item) => {
+        if (item.name === adapter) {
+          this.adapterFields = item.fields
+        }
+      })
+    },
     getAdapterList() {
       this.$common.axiosGet("/fileBucket/getFileAdapterList.do", false).then(res => {
         if (res.success) {
@@ -129,6 +141,11 @@ export default ({
     toForm(data) {
       this.showEditForm = true
       this.editForm = data
+      this.adapterList.forEach((item) => {
+        if (item.name === data.adapter) {
+          this.adapterFields = item.fields
+        }
+      })
     },
     async add() {
       this.editForm = {
@@ -143,7 +160,7 @@ export default ({
       this.editForm = {}
     },
     submitForm() {
-      this.$common.axiosForm("/fileBucket/save.do", this.editForm, true).then((res) => {
+      this.$common.axiosJson("/fileBucket/save.do", this.editForm, true).then((res) => {
         if (res.success) {
           this.showEditForm = false
           this.getTableList()
@@ -168,7 +185,7 @@ export default ({
       return res.data
     }
   }
-})
+}
 </script>
 
 <style scoped>
