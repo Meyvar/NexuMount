@@ -4,6 +4,7 @@
     <div class="upload-actions">
       <el-button type="primary" @click="openFileSelect">上传文件</el-button>
       <el-button @click="openFolderSelect">上传文件夹</el-button>
+      <el-button @click="finishedList = []">清除已完成</el-button>
       <input
           ref="fileInput"
           type="file"

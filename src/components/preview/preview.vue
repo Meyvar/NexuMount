@@ -60,12 +60,18 @@ export default {
   },
   methods: {
     getFileData() {
-      let file = JSON.parse(localStorage.getItem("preview"));
-      this.$common.axiosGet("/pub/dav/get.do?path=" + file.href, false).then((res) => {
+      let path = decodeURIComponent(this.$route.path)
+      if (path == '/home') {
+        path = '/'
+      } else {
+        path = path.replace('/home', '')
+      }
+
+      this.$common.axiosGet("/pub/dav/get.do?path=" + path, false).then((res) => {
         if (res.success) {
           let data = res.data;
           this.fileData = data
-          this.href = data.href;
+          this.href = process.env.VUE_APP_BASE_API + "/pub/dav/download.do?path=" + data.href;
           if (!data.contentType) {
             data.contentType = "";
           }
