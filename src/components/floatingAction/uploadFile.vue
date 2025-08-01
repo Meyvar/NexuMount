@@ -3,7 +3,7 @@
     <!-- 上传按钮 -->
     <div class="upload-actions">
       <el-button type="primary" @click="openFileSelect">上传文件</el-button>
-      <el-button @click="openFolderSelect">上传文件夹</el-button>
+      <el-button type="primary" @click="openFolderSelect">上传文件夹</el-button>
       <el-button @click="finishedList = []">清除已完成</el-button>
       <input
           ref="fileInput"
@@ -26,38 +26,44 @@
     <el-tabs v-model="activeTab">
       <el-tab-pane label="上传中" name="uploading">
         <div v-if="uploadingList.length" class="upload-section">
-          <div v-for="item in uploadingList" :key="item.id" class="upload-item">
-            <span class="filename">{{ item.name }}</span>
-            <el-progress
-                :percentage="item.progress"
-                :status="item.error ? 'exception' : undefined"
-                :stroke-width="14"
-            />
-            <span v-if="item.error" class="error-text">失败</span>
-          </div>
+          <el-scrollbar height="300px">
+            <div v-for="item in uploadingList" :key="item.id" class="upload-item">
+              <span class="filename">{{ item.name }}</span>
+              <el-progress
+                  :percentage="item.progress"
+                  :status="item.error ? 'exception' : undefined"
+                  :stroke-width="14"
+              />
+              <span v-if="item.error" class="error-text">失败</span>
+            </div>
+          </el-scrollbar>
         </div>
         <div v-else class="empty">暂无上传任务</div>
       </el-tab-pane>
 
       <el-tab-pane label="上传完成" name="finished">
         <div v-if="finishedList.length" class="upload-section">
-          <div v-for="item in finishedList" :key="item.id" class="upload-item">
-            <span class="filename">{{ item.name }}</span>
-            <el-icon color="#67C23A">
-              <CircleCheck/>
-            </el-icon>
-          </div>
+          <el-scrollbar height="300px">
+            <div v-for="item in finishedList" :key="item.id" class="upload-item">
+              <span class="filename">{{ item.name }}</span>
+              <el-icon color="#67C23A">
+                <CircleCheck/>
+              </el-icon>
+            </div>
+          </el-scrollbar>
         </div>
         <div v-else class="empty">暂无已上传文件</div>
       </el-tab-pane>
 
       <el-tab-pane label="上传失败" name="failed">
         <div v-if="failedList.length" class="upload-section">
-          <div v-for="item in failedList" :key="item.id" class="upload-item">
-            <span class="filename">{{ item.name }}</span>
-            <span class="error-text">{{ item.msg }}</span>
-            <el-button size="small" type="danger" @click="retryFailed(item)">重试</el-button>
-          </div>
+          <el-scrollbar height="300px">
+            <div v-for="item in failedList" :key="item.id" class="upload-item">
+              <span class="filename">{{ item.name }}</span>
+              <span class="error-text">{{ item.msg }}</span>
+              <el-button size="small" type="danger" @click="retryFailed(item)">重试</el-button>
+            </div>
+          </el-scrollbar>
         </div>
         <div v-else class="empty">暂无失败文件</div>
       </el-tab-pane>
@@ -84,7 +90,8 @@ export default {
     },
     refreshTable: {
       type: Function,
-      default: () => {}
+      default: () => {
+      }
     }
   },
   data() {
@@ -149,7 +156,7 @@ export default {
           const newProgress = Math.round((e.loaded / e.total) * 100)
           const index = this.uploadingList.findIndex(t => t.id === task.id)
           if (index !== -1) {
-            const updatedTask = { ...this.uploadingList[index], progress: newProgress }
+            const updatedTask = {...this.uploadingList[index], progress: newProgress}
             this.uploadingList.splice(index, 1, updatedTask)
           }
         }
@@ -157,20 +164,22 @@ export default {
           .then(res => {
             const index = this.uploadingList.findIndex(t => t.id === task.id)
             if (res.success) {
-              const finished = { ...task, progress: 100 }
+              const finished = {...task, progress: 100}
               this.finishedList.push(finished)
-              this.refreshTable(true)
             } else {
-              const failed = { ...task, error: true, msg: res.msg }
+              const failed = {...task, error: true, msg: res.msg}
               this.failedList.push(failed)
             }
           })
           .catch(() => {
-            const failed = { ...task, error: true, msg: '上传失败' }
+            const failed = {...task, error: true, msg: '上传失败'}
             this.failedList.push(failed)
           })
           .finally(() => {
             this.uploadingList = this.uploadingList.filter(t => t.id !== task.id)
+            if (this.uploadingList.length === 0) {
+              this.refreshTable(true)
+            }
           })
     },
 
