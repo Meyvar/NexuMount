@@ -135,6 +135,7 @@ export default {
     async add() {
       this.editForm = {
         sort: 0,
+        fieldJson: {}
       }
       this.showEditForm = true
     },
