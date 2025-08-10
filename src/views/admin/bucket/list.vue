@@ -48,21 +48,6 @@
         <el-form-item label="排序" prop="sort">
           <el-input v-model="editForm.sort" placeholder="文件排序"/>
         </el-form-item>
-        <el-form-item label="文件加密">
-          <el-switch
-              v-model="editForm.encryption"
-              class="ml-2"
-              style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-              active-value="1"
-              inactive-value="0"
-          />
-          <el-alert type="info" :closable="false">开启加密后大部门文件无法在线预览</el-alert>
-        </el-form-item>
-
-        <el-form-item label="加密密钥" v-show="editForm.encryption == 1">
-          <el-input v-model="editForm.aesKey" placeholder="AES加密key（128位）" readonly/>
-          <el-alert type="warning" :closable="false">请妥善保存密钥，丢失后已上传加密文件无法还原！</el-alert>
-        </el-form-item>
 
         <el-form-item v-for="(item, index) in adapterFields" :key="index" :label="item.label">
           <el-input v-model="editForm.fieldJson[item.name]"/>
@@ -150,8 +135,6 @@ export default {
     async add() {
       this.editForm = {
         sort: 0,
-        encryption: 0,
-        aesKey: await this.generateAesKeyBase64()
       }
       this.showEditForm = true
     },
@@ -180,10 +163,6 @@ export default {
         }
       })
     },
-    async generateAesKeyBase64() {
-      let res = await this.$common.axiosGet("/public/getAesKey.do", false)
-      return res.data
-    }
   }
 }
 </script>

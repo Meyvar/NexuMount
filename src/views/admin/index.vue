@@ -11,11 +11,9 @@
           :collapse="isCollapse"
           router
       >
-        <el-menu-item index="/admin/home">
-          <el-icon>
-            <HomeFilled/>
-          </el-icon>
-          <span>首页</span>
+        <el-menu-item index="/admin/setting">
+          <el-icon><Setting /></el-icon>
+          <span>系统配置</span>
         </el-menu-item>
         <el-menu-item index="/admin/user/list">
           <el-icon>
@@ -28,6 +26,10 @@
             <List/>
           </el-icon>
           <span>存储管理</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/task/list">
+          <el-icon><Management /></el-icon>
+          <span>任务管理</span>
         </el-menu-item>
       </el-menu>
     </el-aside>

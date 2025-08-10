@@ -1,4 +1,5 @@
 <template>
+  <div v-html="customCode"></div>
   <div class="common-layout">
     <el-container>
       <el-header>
@@ -14,7 +15,9 @@
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click="this.$router.push('/admin')" v-if="userInfo.uuid === '7a207a4a3b4d4d92b6b84329829bdeab'">后台管理</el-dropdown-item>
+              <el-dropdown-item @click="this.$router.push('/admin')"
+                                v-if="userInfo.uuid === '7a207a4a3b4d4d92b6b84329829bdeab'">后台管理
+              </el-dropdown-item>
               <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -32,16 +35,41 @@
 export default {
   data() {
     return {
-      userInfo: {}
+      userInfo: {
+        customCode: "",
+      }
     }
   },
   mounted() {
     this.userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    this.injectCode(this.customCode);
   },
   methods: {
+    injectCode() {
+      this.customCode = this.$store.getters.getWebConfig().webScript + this.$store.getters.getWebConfig().webStyle
+      const container = document.createElement('div');
+      container.innerHTML = this.customCode;
+
+      container.querySelectorAll('style').forEach(styleTag => {
+        document.head.appendChild(styleTag);
+      });
+
+
+      setTimeout(() => {
+        container.querySelectorAll('script').forEach(scriptTag => {
+          const newScript = document.createElement('script');
+          if (scriptTag.src) {
+            newScript.src = scriptTag.src;
+          } else {
+            newScript.textContent = scriptTag.innerHTML;
+          }
+          document.body.appendChild(newScript);
+        });
+      }, 1000);
+    },
     logout() {
       this.$common.axiosGet("/public/logout.do", true).then((res) => {
-        if (res.success){
+        if (res.success) {
           window.location.reload();
         }
       });
@@ -70,13 +98,13 @@ export default {
   justify-content: space-between;
 }
 
-.el-footer{
+.el-footer {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.user{
+.user {
   height: 60px;
   font-size: 18px;
   font-weight: bold;

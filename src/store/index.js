@@ -2,16 +2,17 @@ import {createStore} from 'vuex'
 
 export default createStore({
     state: {
-        fileListMap: {},
+        webConfig: {},
     },
     getters: {
-        getFileListMap: (state) => (path) => {
-            return state.fileListMap[path]
+        getWebConfig: (state) => () => {
+            return state.webConfig
         },
     },
     mutations: {
-        setFileList(state, fileList) {
-            state.fileListMap[fileList.path] = fileList.list
+        setWebConfig(state, webConfig) {
+            state.webConfig = webConfig
+            document.title = state.webConfig.webTitle
         },
     },
     actions: {},

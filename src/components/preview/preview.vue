@@ -4,8 +4,8 @@
       <img class="content_img" v-if="type === 'image'" :src="href">
       <vue3-video-player :src="href" v-else-if="type === 'video' || type === 'audio'"></vue3-video-player>
       <preview-text :src="href" v-else-if="type === 'text'"></preview-text>
-      <iframe v-else-if="type === 'office'" frameborder="0" width="100%" height="100%"
-              :src="'https://view.officeapps.live.com/op/view.aspx?src=' + encodeURIComponent(href)">
+      <iframe v-else-if="type === 'iframe'" frameborder="0" width="100%" height="100%"
+              :src="href">
       </iframe>
       <pdf v-else-if="type === 'pdf'" :href="href"/>
       <div class="notPreview" v-else>
@@ -72,26 +72,62 @@ export default {
           let data = res.data;
           this.fileData = data
           this.href = process.env.VUE_APP_BASE_API + "/pub/dav/download.do?path=" + data.href;
-          if (!data.contentType) {
-            data.contentType = "";
+
+          let previewMap = {}
+          let previewServer = JSON.parse(this.$store.getters.getWebConfig().previewServer)
+
+
+          this.$store.getters.getWebConfig().previewText.split(",").forEach((v) => {
+            previewMap[v] = previewServer.text.server
+          })
+
+          this.$store.getters.getWebConfig().previewAudio.split(",").forEach((v) => {
+            previewMap[v] = previewServer.audio.server
+          })
+
+          this.$store.getters.getWebConfig().previewVideo.split(",").forEach((v) => {
+            previewMap[v] = previewServer.video.server
+          })
+
+          this.$store.getters.getWebConfig().previewImage.split(",").forEach((v) => {
+            previewMap[v] = previewServer.image.server
+          })
+
+          previewMap.pdf = previewServer.pdf.server
+
+          for (let i = 0; i < previewServer.diy.length; i++) {
+            let extensions = previewServer.diy[i].extension.split(',')
+            extensions.forEach(extension => {
+              previewMap[extension] = previewServer.diy[i].server
+            })
           }
-          if (data.contentType.indexOf('image') > -1) {
+
+          let names = data.name.split('.')
+          let extension = names[names.length - 1]
+
+          let server = previewMap[extension]
+
+          if (server === "systemImage") {
             this.type = "image"
-          } else if (data.contentType.indexOf('video') > -1) {
+          } else if (server === "systemVideo") {
             this.type = "video"
-          } else if (data.contentType.indexOf('audio') > -1) {
+          } else if (server === "systemAudio") {
             this.type = "audio"
-          } else if (data.contentType.indexOf('text') > -1) {
+          } else if (server === "systemText") {
             this.type = "text"
-          } else if (data.contentType.indexOf('sheet') > -1
-              || data.contentType.indexOf('wordprocessingml') > -1
-              || data.contentType.indexOf('presentation') > -1) {
-            this.href = location.origin + data.href
-            this.type = "office"
-          } else if (data.contentType.indexOf('pdf') > -1) {
+          } else if (server === "systemPdf") {
             this.type = "pdf"
           } else {
-            this.fileIcon = this.getFileIcon(res.data);
+            if (server != null && server !== "") {
+              let url = location.origin + "/api/pub/dav/download.do?path=" + JSON.parse(localStorage.getItem("preview")).href + "&token=" + this.$common.getCookies("Authorization-Key")
+              url = encodeURIComponent(url)
+              let serverUrl = server.replace("${url}", url)
+
+              this.href = serverUrl
+              this.type = "iframe"
+            } else {
+              this.fileIcon = this.getFileIcon(res.data);
+            }
           }
         } else {
           this.$message.error(res.msg);

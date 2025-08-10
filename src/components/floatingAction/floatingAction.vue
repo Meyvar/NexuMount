@@ -25,7 +25,7 @@
       :width="uploadWidth"
       class="responsive-upload-dialog"
   >
-    <UploadBox ref="uploadBox" upload-url="/pub/dav/upload.do" :refresh-table="this.refreshTable"/>
+    <UploadBox ref="uploadBox" :upload-url="uploadUrl" :refresh-table="this.refreshTable"/>
   </el-dialog>
 
   <el-dialog
@@ -75,7 +75,8 @@ export default {
       actions: [],
       uploadWidth: 800,
       createFolder: false,
-      createForm: {}
+      createForm: {},
+      uploadUrl: process.env.VUE_APP_BASE_API + '/pub/dav/upload.do',
     }
   },
   mounted() {
