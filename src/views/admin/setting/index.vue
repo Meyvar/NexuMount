@@ -41,9 +41,19 @@
         <el-form-item label="上传任务线程">
           <el-input-number :min="1" :max="10" v-model="form.taskUploadNumber"/>
         </el-form-item>
-        <el-form-item label="移动/复制线程数">
-          <el-input-number :min="1" :max="10" v-model="form.taskCopyNumber"/>
-        </el-form-item>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="移动/复制线程数">
+              <el-input-number :min="1" :max="10" v-model="form.taskCopyNumber"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="文件任务缓存大小（MB）">
+              <el-input-number :min="1" :max="10" v-model="form.taskBufferSize"/>
+            </el-form-item>
+          </el-col>
+        </el-row>
 
       </el-form>
     </el-scrollbar>
