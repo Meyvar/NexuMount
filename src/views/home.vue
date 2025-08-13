@@ -63,6 +63,7 @@
       v-model="move.show"
       title="选择文件夹"
       :width="dialogWidth"
+      destroy-on-close
       class="responsive-upload-dialog">
     <el-tree
         lazy
@@ -72,6 +73,7 @@
         :props=move.treeProps
         :expand-on-click-node=false
         ref="pathTree"
+        :default-expanded-keys='["/"]'
     />
     <template #footer>
       <div class="dialog-footer">
