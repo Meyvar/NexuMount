@@ -3,10 +3,13 @@
             style="width: 100%;"
             :height="listHeight"
             class="file_item"
-            @row-click="goPath"
+            @cell-click="loadPath"
             show-overflow-tooltip
             @row-contextmenu="showContextMenu"
+            @selection-change="selectionChange"
+            ref="fileTable"
   >
+    <el-table-column type="selection" width="40" v-if="fileSelect"/>
     <el-table-column prop="name" label="名称" style="padding-left: 10px">
       <template #default="scope">
         <div class="table-row-content" style="display: flex">
@@ -58,9 +61,14 @@ export default {
       default: () => {
       }
     },
-    showContextMenu:{
+    showContextMenu: {
       type: Function,
-      default: () => {}
+      default: () => {
+      }
+    },
+    fileSelect: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -70,11 +78,41 @@ export default {
   },
   mounted() {
     this.handleResize()
+    this.setCurrentRow()
   },
   methods: {
     handleResize() {
       let windowWidth = window.innerWidth
       this.showFileSize = windowWidth >= 620;
+    },
+    loadPath(row, column) {
+      if (column.type !== "selection") {
+        this.goPath(row)
+      }
+    },
+    selectionChange(selectArr) {
+      let selectMap = {}
+      selectArr.forEach((item) => {
+        selectMap[item.name] = item
+      })
+      this.tableList.forEach(item => {
+        if (selectMap[item.name] != null) {
+          item.select = true
+        } else {
+          item.select = false
+        }
+      })
+    },
+    setCurrentRow() {
+      let selectArr = []
+      this.tableList.forEach(item => {
+        if (item.select === true) {
+          selectArr.push(item)
+        }
+      })
+      selectArr.forEach((item) => {
+        this.$refs.fileTable.toggleRowSelection(item, true)
+      })
     }
   }
 }

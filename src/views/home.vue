@@ -20,12 +20,13 @@
     <div class="file-layout__table">
 
       <file-table :list-height="listHeight" :table-list="tableList" :getFileIcon="getFileIcon" :goPath="goPath"
-                  :format-size="formatSize" v-if="!preview && tableType == 'table'" :showContextMenu="showContextMenu"
+                  :format-size="formatSize" :file-select="fileSelect" v-if="!preview && tableType === 'table'"
+                  :showContextMenu="showContextMenu"
       ></file-table>
 
-      <el-scrollbar :height="listHeight" v-if="!preview && tableType == 'grid'">
+      <el-scrollbar :height="listHeight" v-if="!preview && tableType === 'grid'">
         <file-grid :table-list="tableList" :getFileIcon="getFileIcon" :goPath="goPath"
-                   :contextmenu="showContextMenu"></file-grid>
+                   :contextmenu="showContextMenu" :file-select="fileSelect"></file-grid>
       </el-scrollbar>
 
       <preview v-if="preview" :height="listHeight" :getFileIcon="getFileIcon" :get-file-size="formatSize"></preview>
@@ -57,7 +58,8 @@
   </el-dialog>
 
 
-  <floating-action :refreshTable="refreshTable" class="floating_action"></floating-action>
+  <floating-action :refreshTable="refreshTable" :file-select="updateFileSelect"
+                   class="floating_action"></floating-action>
 
   <el-dialog
       v-model="move.show"
@@ -83,6 +85,35 @@
       </div>
     </template>
   </el-dialog>
+
+
+  <div class="footer-tools" v-if="fileSelect">
+    <div class="footer-tools-list">
+      <el-tooltip content="移动">
+        <div class="footer-tools-list-item" @click="footerTools('move')">
+          <el-icon color="#ffb224">
+            <FolderRemove/>
+          </el-icon>
+        </div>
+      </el-tooltip>
+
+      <el-tooltip content="复制">
+        <div class="footer-tools-list-item" @click="footerTools('copy')">
+          <el-icon color="#30a46c">
+            <CopyDocument/>
+          </el-icon>
+        </div>
+      </el-tooltip>
+
+      <el-tooltip content="删除">
+        <div class="footer-tools-list-item" @click="footerTools('remove')">
+          <el-icon color="#e5484d">
+            <DeleteFilled/>
+          </el-icon>
+        </div>
+      </el-tooltip>
+    </div>
+  </div>
 
 
   <!-- 自定义右键菜单 -->
@@ -170,6 +201,7 @@ export default {
         name: '',
       },
       contextRow: {},
+      fileSelect: localStorage.fileSelect === 'true'
     }
   },
   mounted() {
@@ -184,6 +216,9 @@ export default {
     window.addEventListener('resize', this.updateMoveWidth)
   },
   methods: {
+    updateFileSelect() {
+      this.fileSelect = localStorage.fileSelect === 'true'
+    },
     initBreadcrumb() {
       this.breadcrumb = []
       let path = decodeURIComponent(this.$route.path)
@@ -305,7 +340,10 @@ export default {
         width: 800,
         show: false,
         newName: '',
-        name: ''
+        name: '',
+        treeProps: {
+          label: 'name'
+        },
       }
     },
     rootPathLoad(node, resolve, reject) {
@@ -345,14 +383,26 @@ export default {
         this.move.newName += "/"
       }
       this.move.newName += this.move.name
-      this.$common.axiosForm("/pub/dav/" + this.move.type + ".do", {path: this.move.href}, true, {Destination: encodeURIComponent(this.move.newName)}).then(res => {
-        if (res.success) {
-          this.closeMove()
-          this.refreshTable()
-        } else {
-          this.$message.error(res.msg)
-        }
-      })
+
+      if (this.move.type.indexOf("List") > 0) {
+        this.$common.axiosJson("/pub/dav/" + this.move.type + ".do", JSON.parse(this.move.href), true, {Destination: encodeURIComponent(this.move.newName)}).then(res => {
+          if (res.success) {
+            this.closeMove()
+            this.refreshTable()
+          } else {
+            this.$message.error(res.msg)
+          }
+        })
+      } else {
+        this.$common.axiosForm("/pub/dav/" + this.move.type + ".do", {path: this.move.href}, true, {Destination: encodeURIComponent(this.move.newName)}).then(res => {
+          if (res.success) {
+            this.closeMove()
+            this.refreshTable()
+          } else {
+            this.$message.error(res.msg)
+          }
+        })
+      }
     },
     refreshTable() {
       this.getTableList(true)
@@ -422,7 +472,33 @@ export default {
         this.move.href = this.contextRow.href
         this.move.type = type
       }
-
+    },
+    footerTools(type) {
+      let selectArr = this.tableList.filter(item => item.select)
+      if (type === 'move' || type === 'copy') {
+        this.move.show = true
+        this.move.href = JSON.stringify(selectArr.map(item => item.href))
+        this.move.type = type + "List"
+      } else if (type === 'remove') {
+        this.$messageBox.confirm(
+            '确定要删除吗?',
+            '提示：',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning',
+            }).then(() => {
+          this.$common.axiosJson("/pub/dav/deleteList.do", selectArr.map(item => item.href), true).then(res => {
+            if (res.success) {
+              this.refreshTable()
+            } else {
+              this.$message.error(res.msg)
+            }
+          })
+        })
+            .catch(() => {
+            })
+      }
     }
   }
 }
@@ -509,5 +585,44 @@ export default {
 
 .context-menu .menu-item:hover {
   background-color: #f5f7fa;
+}
+
+.footer-tools {
+  position: absolute;
+  margin-top: 5px;
+  width: 100%;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer-tools-list {
+  padding: 10px;
+  background-color: #ffffff;
+  height: calc(100% - 20px);
+  box-shadow: var(--el-box-shadow-light);
+  display: flex;
+  align-items: center;
+}
+
+.footer-tools-list-item {
+  font-size: 20px;
+  font-weight: bold;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+}
+
+
+.footer-tools-list-item:hover {
+  background-color: #d7d7d9;
+  cursor: pointer;
+}
+</style>
+
+<style>
+.file-layout__table .el-checkbox__inner {
+  background-color: #e0e0e0;
 }
 </style>

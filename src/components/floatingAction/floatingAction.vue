@@ -62,6 +62,11 @@ export default {
       type: Function,
       default: () => {
       }
+    },
+    fileSelect: {
+      type: Function,
+      default: () => {
+      }
     }
   },
   components: {UploadBox},
@@ -133,6 +138,14 @@ export default {
           handler: () => {
             this.createFolder = true
             this.createForm.type = 'file'
+          }
+        },
+        {
+          label: '文件多选',
+          handler: () => {
+            let fileSelect = localStorage.fileSelect
+            localStorage.fileSelect = fileSelect !== 'true'
+            this.fileSelect()
           }
         }
       ]
