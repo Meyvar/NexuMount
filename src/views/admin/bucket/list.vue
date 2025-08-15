@@ -155,14 +155,25 @@ export default {
       })
     },
     remove(row) {
-      this.$common.axiosForm("/fileBucket/delete.do", {uuid: row.uuid}, true).then((res) => {
-        if (res.success) {
-          this.getTableList()
-          this.$message.success(res.msg)
-        } else {
-          this.$message.error(res.msg)
-        }
+      this.$messageBox.confirm(
+          '确定要删除吗?',
+          '提示：',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+          }).then(() => {
+        this.$common.axiosForm("/fileBucket/delete.do", {uuid: row.uuid}, true).then((res) => {
+          if (res.success) {
+            this.getTableList()
+            this.$message.success(res.msg)
+          } else {
+            this.$message.error(res.msg)
+          }
+        })
       })
+          .catch(() => {
+          })
     },
   }
 }
