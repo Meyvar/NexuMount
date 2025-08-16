@@ -8,17 +8,10 @@ export default {
     return {}
   },
   mounted() {
-    this.getWebConfig()
+
   },
   methods: {
-    async getWebConfig() {
-      let res = await this.$common.axiosGet("/public/getWebConfig.do", true)
-      if (res.success) {
-        this.$store.commit("setWebConfig", res.data)
-      } else {
-        this.$message.error(res.message)
-      }
-    }
+
   }
 }
 </script>

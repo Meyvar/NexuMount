@@ -22,14 +22,13 @@
 </template>
 
 <script>
-import store from "@/store";
 
 export default {
   data() {
     return {
       loginForm: {
-        username: "admin",
-        password: "123456",
+        username: process.env.VUE_APP_DEV_USERNAME,
+        password: process.env.VUE_APP_DEV_PASSWORD,
       },
       LoginRules: {
         username: [

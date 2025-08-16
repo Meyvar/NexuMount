@@ -8,9 +8,12 @@
               :src="href">
       </iframe>
       <pdf v-else-if="type === 'pdf'" :href="href"/>
-      <div class="notPreview" v-else>
+      <div class="notPreview" v-else-if="type === 'download'">
         <img :src="fileIcon">
         <div class="file-info">{{ fileData.name }} ({{ getFileSize(fileData.size) }})</div>
+      </div>
+      <div v-else>
+        <el-empty description="加载中..." />
       </div>
     </div>
     <div class="button_list">
@@ -59,7 +62,7 @@ export default {
     this.getFileData();
   },
   methods: {
-    getFileData() {
+    async getFileData() {
       let path = decodeURIComponent(this.$route.path)
       if (path == '/home') {
         path = '/'
@@ -67,72 +70,79 @@ export default {
         path = path.replace('/home', '')
       }
 
-      this.$common.axiosGet("/pub/dav/get.do?path=" + path, false).then((res) => {
-        if (res.success) {
-          let data = res.data;
-          this.fileData = data
-          this.href = process.env.VUE_APP_BASE_API + "/pub/dav/download.do?path=" + data.href;
+      let webConfig = this.$store.getters.getWebConfig()
 
-          let previewMap = {}
-          let previewServer = JSON.parse(this.$store.getters.getWebConfig().previewServer)
+      while (webConfig.previewServer == null){
+        await new Promise(resolve => setTimeout(resolve, 500));
+        webConfig = this.$store.getters.getWebConfig()
+      }
+
+      let res = await this.$common.axiosGet("/pub/dav/get.do?path=" + path, false)
+      if (res.success) {
+        let data = res.data;
+        this.fileData = data
+        this.href = process.env.VUE_APP_BASE_API + "/pub/dav/download.do?path=" + data.href;
+
+        let previewMap = {}
+        let previewServer = JSON.parse(this.$store.getters.getWebConfig().previewServer)
 
 
-          this.$store.getters.getWebConfig().previewText.split(",").forEach((v) => {
-            previewMap[v] = previewServer.text.server
+        this.$store.getters.getWebConfig().previewText.split(",").forEach((v) => {
+          previewMap[v] = previewServer.text.server
+        })
+
+        this.$store.getters.getWebConfig().previewAudio.split(",").forEach((v) => {
+          previewMap[v] = previewServer.audio.server
+        })
+
+        this.$store.getters.getWebConfig().previewVideo.split(",").forEach((v) => {
+          previewMap[v] = previewServer.video.server
+        })
+
+        this.$store.getters.getWebConfig().previewImage.split(",").forEach((v) => {
+          previewMap[v] = previewServer.image.server
+        })
+
+        previewMap.pdf = previewServer.pdf.server
+
+        for (let i = 0; i < previewServer.diy.length; i++) {
+          let extensions = previewServer.diy[i].extension.split(',')
+          extensions.forEach(extension => {
+            previewMap[extension] = previewServer.diy[i].server
           })
-
-          this.$store.getters.getWebConfig().previewAudio.split(",").forEach((v) => {
-            previewMap[v] = previewServer.audio.server
-          })
-
-          this.$store.getters.getWebConfig().previewVideo.split(",").forEach((v) => {
-            previewMap[v] = previewServer.video.server
-          })
-
-          this.$store.getters.getWebConfig().previewImage.split(",").forEach((v) => {
-            previewMap[v] = previewServer.image.server
-          })
-
-          previewMap.pdf = previewServer.pdf.server
-
-          for (let i = 0; i < previewServer.diy.length; i++) {
-            let extensions = previewServer.diy[i].extension.split(',')
-            extensions.forEach(extension => {
-              previewMap[extension] = previewServer.diy[i].server
-            })
-          }
-
-          let names = data.name.split('.')
-          let extension = names[names.length - 1]
-
-          let server = previewMap[extension]
-
-          if (server === "systemImage") {
-            this.type = "image"
-          } else if (server === "systemVideo") {
-            this.type = "video"
-          } else if (server === "systemAudio") {
-            this.type = "audio"
-          } else if (server === "systemText") {
-            this.type = "text"
-          } else if (server === "systemPdf") {
-            this.type = "pdf"
-          } else {
-            if (server != null && server !== "") {
-              let url = location.origin + "/api/pub/dav/download.do?path=" + JSON.parse(localStorage.getItem("preview")).href + "&token=" + this.$common.getCookies("Authorization-Key")
-              url = encodeURIComponent(url)
-              let serverUrl = server.replace("${url}", url)
-
-              this.href = serverUrl
-              this.type = "iframe"
-            } else {
-              this.fileIcon = this.getFileIcon(res.data);
-            }
-          }
-        } else {
-          this.$message.error(res.msg);
         }
-      })
+
+        let names = data.name.split('.')
+        let extension = names[names.length - 1]
+
+        let server = previewMap[extension]
+
+        if (server === "systemImage") {
+          this.type = "image"
+        } else if (server === "systemVideo") {
+          this.type = "video"
+        } else if (server === "systemAudio") {
+          this.type = "audio"
+        } else if (server === "systemText") {
+          this.type = "text"
+        } else if (server === "systemPdf") {
+          this.type = "pdf"
+        } else {
+          if (server != null && server !== "") {
+            let url = location.origin + "/api/pub/dav/download.do?path=" + JSON.parse(localStorage.getItem("preview")).href + "&token=" + this.$common.getCookies("Authorization-Key")
+            url = encodeURIComponent(url)
+            let serverUrl = server.replace("${url}", url)
+
+            this.href = serverUrl
+            this.type = "iframe"
+          } else {
+            this.type = "download"
+            this.fileIcon = this.getFileIcon(res.data);
+          }
+        }
+      } else {
+        this.$message.error(res.msg);
+      }
     },
     download() {
       let path = JSON.parse(localStorage.getItem("preview")).href

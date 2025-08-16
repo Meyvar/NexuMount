@@ -41,22 +41,38 @@ export default {
     }
   },
   mounted() {
+    window.onload = () => {
+      this.getWebConfig();
+    };
     this.userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    this.injectCode(this.customCode);
   },
   methods: {
+    async getWebConfig() {
+      let res = await this.$common.axiosGet("/public/getWebConfig.do", true)
+      if (res.success) {
+        this.$store.commit("setWebConfig", res.data)
+        this.injectCode();
+      } else {
+        this.$message.error(res.message)
+      }
+    },
     injectCode() {
       this.customCode = this.$store.getters.getWebConfig().webScript + this.$store.getters.getWebConfig().webStyle
       const container = document.createElement('div');
       container.innerHTML = this.customCode;
 
       container.querySelectorAll('style').forEach(styleTag => {
-        document.head.appendChild(styleTag);
+        if (styleTag != null){
+          document.head.appendChild(styleTag);
+        }
       });
 
 
       setTimeout(() => {
         container.querySelectorAll('script').forEach(scriptTag => {
+          if (scriptTag == null){
+            return
+          }
           const newScript = document.createElement('script');
           if (scriptTag.src) {
             newScript.src = scriptTag.src;
