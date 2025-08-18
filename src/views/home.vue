@@ -1,7 +1,7 @@
 <template>
   <div class="file-layout">
     <div class="file-layout__header">
-      <div class="files-path">
+      <el-scrollbar class="files-path" ref="scrollbarRef">
         <el-breadcrumb separator="/">
           <el-breadcrumb-item :to="{path: '/home'}">
             <img src="@/assets/icon/house.png" width="20">
@@ -10,7 +10,7 @@
             <div class="" style="width: 100%">{{ item.title }}</div>
           </el-breadcrumb-item>
         </el-breadcrumb>
-      </div>
+      </el-scrollbar>
       <div class="files-view-type" @click="showType" v-if="!preview">
         <el-icon>
           <Grid/>
@@ -145,13 +145,12 @@ import ppt from '@/assets/icon/powerpoint.png'
 import word from '@/assets/icon/word.png'
 
 import FileTable from "@/components/fileTable.vue";
-import PathBreadcrumb from "@/components/pathBreadcrumb.vue";
 import Preview from "@/components/preview/preview.vue";
 import FileGrid from "@/components/fileGrid.vue";
 import FloatingAction from "@/components/floatingAction/floatingAction.vue";
 
 export default {
-  components: {FloatingAction, FileGrid, Preview, PathBreadcrumb, FileTable},
+  components: {FloatingAction, FileGrid, Preview, FileTable},
   watch: {
     '$route.fullPath'() {
       this.initBreadcrumb();
@@ -238,6 +237,21 @@ export default {
         this.preview = false
         this.getTableList()
       }
+
+
+      this.$nextTick(() => {
+        const scrollbar = this.$refs.scrollbarRef;
+        let wrap = scrollbar?.wrap$; // 新版 Element Plus
+        if (!wrap && scrollbar?.$el) {
+          wrap = scrollbar.$el.querySelector('.el-scrollbar__wrap'); // 旧版兼容
+        }
+        if (wrap) {
+          wrap.scrollTo({
+            left: wrap.scrollWidth,
+            behavior: 'smooth'
+          });
+        }
+      });
     },
     getTableList(refresh = false) {
       let path = decodeURIComponent(this.$route.path)
@@ -619,10 +633,16 @@ export default {
   background-color: #d7d7d9;
   cursor: pointer;
 }
+
 </style>
 
 <style>
 .file-layout__table .el-checkbox__inner {
   background-color: #e0e0e0;
+}
+
+.files-path .el-scrollbar__wrap--hidden-default {
+  display: flex;
+  align-items: center;
 }
 </style>
