@@ -17,7 +17,7 @@
         </el-icon>
       </div>
     </div>
-    <div class="file-layout__table">
+    <div class="file-layout__table" v-loading="loading">
 
       <file-table :list-height="listHeight" :table-list="tableList" :getFileIcon="getFileIcon" :goPath="goPath"
                   :format-size="formatSize" :file-select="fileSelect" v-if="!preview && tableType === 'table'"
@@ -59,7 +59,7 @@
 
 
   <floating-action :refreshTable="refreshTable" :file-select="updateFileSelect"
-                   class="floating_action"></floating-action>
+                   class="floating_action" v-if="!preview"></floating-action>
 
   <el-dialog
       v-model="move.show"
@@ -166,6 +166,7 @@ export default {
       tableType: 'table',
       tableList: [],
       listHeight: 0,
+      loading: false,
       fileIcon: {
         folder: folderIcon,
         image: imageIcon,
@@ -260,12 +261,15 @@ export default {
       } else {
         path = path.replace('/home', '')
       }
+      this.loading = true
       this.$common.axiosJson("/pub/dav/list.do", {path: path, refresh}, false).then(res => {
         if (res.success) {
           this.tableList = res.data
         } else {
           this.$message.error(res.msg);
+          this.$router.back();
         }
+        this.loading = false
       })
 
     },
