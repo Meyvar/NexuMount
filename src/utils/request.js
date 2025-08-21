@@ -23,7 +23,7 @@ service.interceptors.response.use(resp => {
         }
         if (resp.data.code === 401) {
             redirect()
-            router.replace({path: '/login'})
+            window.location.href = "#/login"
             //退出登录后，禁止点击浏览器返回按钮，返回到系统内部页面
             history.pushState(null, null, document.URL)
             window.addEventListener(
