@@ -386,6 +386,7 @@ export default {
     submitRename() {
       let Destination = this.rename.href
       let path = Destination.replace(this.rename.name, this.rename.newName)
+      path = encodeURIComponent(path)
       this.$common.axiosForm("/pub/dav/move.do", {path: Destination}, true, {Destination: path}).then(res => {
         if (res.success) {
           this.closeRename()
