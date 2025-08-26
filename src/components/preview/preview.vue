@@ -76,12 +76,13 @@ export default {
         await new Promise(resolve => setTimeout(resolve, 500));
         webConfig = this.$store.getters.getWebConfig()
       }
+      path = encodeURIComponent(path)
 
       let res = await this.$common.axiosGet("/pub/dav/get.do?path=" + path, false)
       if (res.success) {
         let data = res.data;
         this.fileData = data
-        this.href = process.env.VUE_APP_BASE_API + "/pub/dav/download.do?path=" + data.href;
+        this.href = process.env.VUE_APP_BASE_API + "/pub/dav/download.do?path=" + encodeURIComponent(data.href);
 
         let previewMap = {}
         let previewServer = JSON.parse(this.$store.getters.getWebConfig().previewServer)
@@ -129,7 +130,7 @@ export default {
           this.type = "pdf"
         } else {
           if (server != null && server !== "") {
-            let url = location.origin + "/api/pub/dav/download.do?path=" + JSON.parse(localStorage.getItem("preview")).href + "&token=" + this.$common.getCookies("Authorization-Key")
+            let url = location.origin + "/api/pub/dav/download.do?path=" + encodeURIComponent(JSON.parse(localStorage.getItem("preview")).href) + "&token=" + this.$common.getCookies("Authorization-Key")
             url = encodeURIComponent(url)
             let serverUrl = server.replace("${url}", url)
 
@@ -146,10 +147,10 @@ export default {
     },
     download() {
       let path = JSON.parse(localStorage.getItem("preview")).href
-      window.open("/api/pub/dav/download.do?path=" + path, '_blank');
+      window.open("/api/pub/dav/download.do?path=" + encodeURIComponent(path), '_blank');
     },
     async copy() {
-      let path = location.origin + "/api/pub/dav/download.do?path=" + JSON.parse(localStorage.getItem("preview")).href + "&token=" + this.$common.getCookies("Authorization-Key")
+      let path = location.origin + "/api/pub/dav/download.do?path=" + encodeURIComponent(JSON.parse(localStorage.getItem("preview")).href) + "&token=" + this.$common.getCookies("Authorization-Key")
 
       const textarea = document.createElement('textarea')
       textarea.value = path

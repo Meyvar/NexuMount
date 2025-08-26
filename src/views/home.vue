@@ -443,7 +443,7 @@ export default {
             .catch(() => {
             })
       } else if (type === 'copyUrl') {
-        let path = location.origin + "/api/pub/dav/download.do?path=" + this.contextRow.href + "&token=" + this.$common.getCookies("Authorization-Key")
+        let path = location.origin + "/api/pub/dav/download.do?path=" + encodeURIComponent(this.contextRow.href) + "&token=" + this.$common.getCookies("Authorization-Key")
 
         const textarea = document.createElement('textarea')
         textarea.value = path
@@ -465,7 +465,7 @@ export default {
         document.body.removeChild(textarea)
       } else if (type === 'download') {
         let path = this.contextRow.href
-        window.open("/api/pub/dav/download.do?path=" + path, '_blank');
+        window.open("/api/pub/dav/download.do?path=" + encodeURIComponent(path), '_blank');
       } else if (type === 'move' || type === 'copy') {
         this.move.show = true
         this.move.name = this.contextRow.name
