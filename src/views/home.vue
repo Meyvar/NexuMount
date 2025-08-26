@@ -89,6 +89,13 @@
 
   <div class="footer-tools" v-if="fileSelect">
     <div class="footer-tools-list">
+      <el-tooltip content="打包下载">
+        <div class="footer-tools-list-item" @click="footerTools('download')">
+          <el-icon color="blue">
+            <Download/>
+          </el-icon>
+        </div>
+      </el-tooltip>
       <el-tooltip content="移动">
         <div class="footer-tools-list-item" @click="footerTools('move')">
           <el-icon color="#ffb224">
@@ -133,17 +140,6 @@
 </template>
 
 <script>
-import folderIcon from '@/assets/icon/folder.png'
-import imageIcon from '@/assets/icon/image.png'
-import videoIcon from '@/assets/icon/video.png'
-import txtIcon from '@/assets/icon/txt.png'
-import fileIcon from '@/assets/icon/file.png'
-import audioIcon from '@/assets/icon/audio.png'
-import pdfIcon from '@/assets/icon/pdf.png'
-import excel from '@/assets/icon/excel.png'
-import ppt from '@/assets/icon/powerpoint.png'
-import word from '@/assets/icon/word.png'
-
 import FileTable from "@/components/fileTable.vue";
 import Preview from "@/components/preview/preview.vue";
 import FileGrid from "@/components/fileGrid.vue";
@@ -168,16 +164,11 @@ export default {
       listHeight: 0,
       loading: false,
       fileIcon: {
-        folder: folderIcon,
-        image: imageIcon,
-        video: videoIcon,
-        text: txtIcon,
-        file: fileIcon,
-        audio: audioIcon,
-        pdf: pdfIcon,
-        excel: excel,
-        ppt: ppt,
-        word: word,
+        folder: require('@/assets/icon/folder.png'),
+        file: {
+          file: require('@/assets/icon/file.png'),
+          "application/pdf": require('@/assets/icon/pdf.png'),
+        }
       },
       preview: false,
       contextMenuVisible: false,
@@ -278,33 +269,24 @@ export default {
         return this.fileIcon.folder
       } else {
         if (row.contentType == null) {
-          return this.fileIcon.file
+          return this.fileIcon.file.file
+        } else {
+          if (row.contentType.startsWith("image/")) return require('@/assets/icon/image.png');
+          if (row.contentType.startsWith("video/")) return require('@/assets/icon/video.png');
+          if (row.contentType.startsWith("audio/")) return require('@/assets/icon/audio.png');
+          if (row.contentType.startsWith("text/")) return require('@/assets/icon/txt.png');
+          if (row.contentType.includes("msword") || row.contentType.includes("wordprocessingml")) return require('@/assets/icon/word.png');
+          if (row.contentType.includes("excel") || row.contentType.includes("spreadsheetml")) return require('@/assets/icon/excel.png');
+          if (row.contentType.includes("powerpoint") || row.contentType.includes("presentationml")) return require('@/assets/icon/powerpoint.png');
+          if (row.contentType.includes("zip") || row.contentType.includes("x-xz") || row.contentType.includes("x-bzip2") || row.contentType.includes("gzip") || row.contentType.includes("tar") || row.contentType.includes("rar") || row.contentType.includes("7z")) return require('@/assets/icon/rar.png');
+
+          let icon = this.fileIcon.file[row.contentType]
+          if (icon == null) {
+            return this.fileIcon.file.file
+          } else {
+            return icon
+          }
         }
-        if (row.contentType.indexOf('image') > -1) {
-          return this.fileIcon.image
-        }
-        if (row.contentType.indexOf('video') > -1) {
-          return this.fileIcon.video
-        }
-        if (row.contentType.indexOf('text') > -1) {
-          return this.fileIcon.text
-        }
-        if (row.contentType.indexOf('audio') > -1) {
-          return this.fileIcon.audio
-        }
-        if (row.contentType.indexOf('pdf') > -1) {
-          return this.fileIcon.pdf
-        }
-        if (row.contentType.indexOf('sheet') > -1) {
-          return this.fileIcon.excel
-        }
-        if (row.contentType.indexOf('wordprocessingml') > -1) {
-          return this.fileIcon.word
-        }
-        if (row.contentType.indexOf('presentation') > -1) {
-          return this.fileIcon.ppt
-        }
-        return this.fileIcon.file
       }
     },
     goPath(row) {
@@ -517,6 +499,12 @@ export default {
         })
             .catch(() => {
             })
+      } else if (type === 'download') {
+        let path = this.$route.fullPath.split('/')
+        let fileName = path[path.length - 1] + ".zip"
+        let fileList = selectArr.map(item => item.href)
+        fileList = encodeURIComponent(JSON.stringify(fileList))
+        window.open("/api/pub/dav/packageDownload.do?fileList=" + fileList + "&fileName=" + fileName, '_blank');
       }
     }
   }
