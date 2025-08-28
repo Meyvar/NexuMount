@@ -28,7 +28,7 @@
 
   <el-drawer v-model="showEditForm" direction="rtl" size="70%" @close="() => {adapterFields = []; editForm = {};}">
     <template #header>
-      <h4>用户编辑</h4>
+      <h4>存储桶编辑</h4>
     </template>
     <template #default>
       <el-form :model="editForm" label-width="auto" label-suffix=":" :rules="formRules">
