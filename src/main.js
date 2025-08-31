@@ -7,8 +7,8 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-import Vue3VideoPlayer from '@cloudgeek/vue3-video-player'
-import '@cloudgeek/vue3-video-player/dist/vue3-video-player.css'
+import vue3videoPlay from 'vue3-video-play' // 引入组件
+import 'vue3-video-play/dist/style.css' // 引入css
 
 
 
@@ -35,7 +35,5 @@ app.use(store)
     .use(ElementPlus, {
         locale: zhCn,
     })
-    .use(Vue3VideoPlayer, {
-        lang: 'zh-CN'
-    })
+    .use(vue3videoPlay)
     .mount('#app')

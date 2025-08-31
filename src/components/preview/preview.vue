@@ -2,7 +2,7 @@
   <div class="preview" :style="{ height: height + 'px' }">
     <div class="preview_content">
       <img class="content_img" v-if="type === 'image'" :src="href">
-      <vue3-video-player :src="href" v-else-if="type === 'video' || type === 'audio'"></vue3-video-player>
+      <vue3-video-play width="100%" height="100%" :src="href" :type="contentType" v-else-if="type === 'video' || type === 'audio'"></vue3-video-play>
       <preview-text :src="href" v-else-if="type === 'text'"></preview-text>
       <iframe v-else-if="type === 'iframe'" frameborder="0" width="100%" height="100%"
               :src="href">
@@ -55,7 +55,8 @@ export default {
       href: '',
       text: '',
       fileIcon: null,
-      fileData: {}
+      fileData: {},
+      contentType: ''
     }
   },
   mounted() {
@@ -81,6 +82,7 @@ export default {
       let res = await this.$common.axiosGet("/pub/dav/get.do?path=" + path, false)
       if (res.success) {
         let data = res.data;
+        this.contentType = data.contentType
         this.fileData = data
         this.href = process.env.VUE_APP_BASE_API + "/pub/dav/download.do?path=" + encodeURIComponent(data.href);
 
